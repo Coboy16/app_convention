@@ -19,7 +19,7 @@ class StoriesSectionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 100,
+      height: 110, // Aumentado de 100 a 110 para evitar overflow
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -67,6 +67,7 @@ class _AddStoryButton extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(right: 12),
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Importante para evitar overflow
           children: [
             Container(
               width: 64,
@@ -83,14 +84,18 @@ class _AddStoryButton extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            SizedBox(
-              width: 64,
-              child: AutoSizeText(
-                'Add Story',
-                style: AppTextStyles.caption,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            Flexible(
+              // Cambio: usar Flexible en lugar de SizedBox fijo
+              child: SizedBox(
+                width: 64,
+                child: AutoSizeText(
+                  'Add Story',
+                  style: AppTextStyles.caption,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  minFontSize: 10, // Tamaño mínimo de fuente
+                ),
               ),
             ),
           ],
@@ -113,6 +118,7 @@ class _StoryItem extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(right: 12),
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Importante para evitar overflow
           children: [
             Container(
               width: 64,
@@ -137,14 +143,18 @@ class _StoryItem extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            SizedBox(
-              width: 64,
-              child: AutoSizeText(
-                story.username,
-                style: AppTextStyles.caption,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            Flexible(
+              // Cambio: usar Flexible en lugar de SizedBox fijo
+              child: SizedBox(
+                width: 64,
+                child: AutoSizeText(
+                  story.username,
+                  style: AppTextStyles.caption,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  minFontSize: 10, // Tamaño mínimo de fuente
+                ),
               ),
             ),
           ],
