@@ -4,3 +4,8 @@ export 'profile_stats_widget.dart';
 export 'profile_info_widget.dart';
 export 'profile_posts_widget.dart';
 export 'edit_profile_form_widget.dart';
+export 'settings_section_widget.dart';
+export 'settings_item_widget.dart';
+export 'settings_toggle_widget.dart';
+export 'settings_radio_widget.dart';
+export 'danger_zone_widget.dart';

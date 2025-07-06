@@ -105,9 +105,11 @@ class ProfileScreen extends StatelessWidget {
                       _showEditProfileModal(context, profile);
                     },
                     onSettings: () {
-                      ToastUtils.showInfo(
-                        context: context,
-                        message: 'Settings coming soon...',
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
                       );
                     },
                     onAvatarEdit: () {
