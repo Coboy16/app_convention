@@ -3,18 +3,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:konecta/features/feactures.dart';
 
-class CentralScreen extends StatelessWidget {
+class CentralScreen extends StatefulWidget {
   const CentralScreen({super.key});
 
   @override
+  State<CentralScreen> createState() => _CentralScreenState();
+}
+
+class _CentralScreenState extends State<CentralScreen> {
+  bool _profileInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<NavigationBloc>().initialize();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NavigationBloc, NavigationState>(
-      builder: (context, state) {
-        return Scaffold(
-          body: _getSelectedView(state),
-          bottomNavigationBar: const BottomNavigationWidget(),
-        );
+    return BlocListener<NavigationBloc, NavigationState>(
+      listener: (context, state) {
+        if (state is NavigationChanged &&
+            state.selectedIndex == 2 &&
+            !_profileInitialized) {
+          context.read<ProfileBloc>().loadProfile();
+          _profileInitialized = true;
+        }
       },
+      child: BlocBuilder<NavigationBloc, NavigationState>(
+        builder: (context, state) {
+          return Scaffold(
+            body: _getSelectedView(state),
+            bottomNavigationBar: const BottomNavigationWidget(),
+          );
+        },
+      ),
     );
   }
 

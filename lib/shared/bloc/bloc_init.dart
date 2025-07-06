@@ -6,7 +6,10 @@ import 'package:provider/single_child_widget.dart';
 import '/features/feactures.dart';
 
 List<SingleChildWidget> getListBloc() {
-  return [BlocProvider(create: (context) => NavigationBloc())];
+  return [
+    BlocProvider(create: (context) => NavigationBloc()),
+    BlocProvider(create: (context) => ProfileBloc()),
+  ];
 }
 
 List<SingleChildWidget> getListeners() {
