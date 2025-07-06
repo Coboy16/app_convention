@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '/features/profile/presentation/bloc/blocs.dart';
+import '/features/profile/presentation/screens/screens.dart';
 import '/features/profile/presentation/widgets/widgets.dart';
+import '/features/profile/presentation/bloc/blocs.dart';
 import '/core/core.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -162,9 +163,11 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showEditProfileModal(BuildContext context, profile) {
-    ToastUtils.showInfo(
-      context: context,
-      message: 'Edit profile modal coming soon...',
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(profile: profile),
+      ),
     );
   }
 
