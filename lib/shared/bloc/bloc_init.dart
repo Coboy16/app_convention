@@ -9,6 +9,7 @@ List<SingleChildWidget> getListBloc() {
   return [
     BlocProvider(create: (context) => NavigationBloc()),
     BlocProvider(create: (context) => ProfileBloc()),
+    BlocProvider(create: (context) => FeedBloc()),
   ];
 }
 
