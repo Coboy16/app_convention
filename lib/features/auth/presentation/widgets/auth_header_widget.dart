@@ -37,7 +37,7 @@ class AuthHeader extends StatelessWidget {
             ),
             child: icon,
           ),
-          SizedBox(height: AppResponsive.isMobile(context) ? 24 : 32),
+          SizedBox(height: AppResponsive.isMobile(context) ? 20 : 32),
         ],
 
         // Título principal

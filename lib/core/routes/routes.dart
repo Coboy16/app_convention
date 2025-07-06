@@ -33,13 +33,11 @@ class AppRoutes {
         builder: (context, state) => const LoginScreen(),
       ),
 
-      // Sign Up (placeholder - crear después)
+      // Sign Up
       GoRoute(
         path: signup,
         name: 'signup',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Sign Up Screen - Por implementar')),
-        ),
+        builder: (context, state) => const SignUpScreen(),
       ),
 
       // Forgot Password (placeholder - crear después)

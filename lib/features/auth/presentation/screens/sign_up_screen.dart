@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-
 import 'package:responsive_framework/responsive_framework.dart';
 
 import '/features/auth/presentation/widgets/widgets.dart';
 import '/core/core.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class SignUpScreen extends StatelessWidget {
+  const SignUpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +49,9 @@ class LoginScreen extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: AppResponsive.isMobile(context) ? 20 : 48),
+            SizedBox(height: AppResponsive.isMobile(context) ? 40 : 48),
 
-            // Card con el formulario de login
+            // Card con el formulario de registro
             Container(
               width: double.infinity,
               constraints: BoxConstraints(
@@ -79,14 +78,14 @@ class LoginScreen extends StatelessWidget {
                   Column(
                     children: [
                       Text(
-                        'Sign In',
+                        'Create Account',
                         style: AppResponsive.isMobile(context)
                             ? AppTextStyles.h4
                             : AppTextStyles.h3,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Welcome back to the convention',
+                        'Join the convention community',
                         style: AppResponsive.isMobile(context)
                             ? AppTextStyles.body2
                             : AppTextStyles.body1,
@@ -96,8 +95,8 @@ class LoginScreen extends StatelessWidget {
 
                   SizedBox(height: AppResponsive.isMobile(context) ? 24 : 32),
 
-                  // Formulario de login
-                  const LoginForm(),
+                  // Formulario de registro
+                  const SignUpForm(),
                 ],
               ),
             ),

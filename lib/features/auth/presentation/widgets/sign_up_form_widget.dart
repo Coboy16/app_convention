@@ -1,43 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 
 import '/features/auth/presentation/widgets/widgets.dart';
 import '/core/core.dart';
 
-class LoginForm extends StatefulWidget {
-  final VoidCallback? onLoginSuccess;
-  final VoidCallback? onGoogleSignIn;
-  final VoidCallback? onForgotPassword;
-  final VoidCallback? onSignUp;
-
-  const LoginForm({
-    super.key,
-    this.onLoginSuccess,
-    this.onGoogleSignIn,
-    this.onForgotPassword,
-    this.onSignUp,
-  });
+class SignUpForm extends StatefulWidget {
+  const SignUpForm({super.key});
 
   @override
-  State<LoginForm> createState() => _LoginFormState();
+  State<SignUpForm> createState() => _SignUpFormState();
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _SignUpFormState extends State<SignUpForm> {
   final _formKey = GlobalKey<FormState>();
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
   bool _isGoogleLoading = false;
 
   @override
   void dispose() {
+    _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) {
       ToastUtils.showError(
         context: context,
@@ -54,18 +46,18 @@ class _LoginFormState extends State<LoginForm> {
       // Simular llamada a API
       await Future.delayed(const Duration(seconds: 2));
 
-      // Aquí irá la lógica real de autenticación con BLoC
+      // Aquí irá la lógica real de registro con BLoC
       ToastUtils.showSuccess(
         context: context,
-        message: 'Inicio de sesión exitoso',
+        message: 'Cuenta creada exitosamente',
       );
 
-      // Navegar al home después del login exitoso
+      // Navegar al home después del registro exitoso
       AppRoutes.goToHome(context);
     } catch (e) {
       ToastUtils.showError(
         context: context,
-        message: 'Error al iniciar sesión. Inténtalo de nuevo.',
+        message: 'Error al crear la cuenta. Inténtalo de nuevo.',
       );
     } finally {
       if (mounted) {
@@ -76,26 +68,26 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
+  Future<void> _handleGoogleSignUp() async {
     setState(() {
       _isGoogleLoading = true;
     });
 
     try {
-      // Simular llamada a Google Sign In
+      // Simular llamada a Google Sign Up
       await Future.delayed(const Duration(seconds: 1));
 
       ToastUtils.showSuccess(
         context: context,
-        message: 'Inicio de sesión con Google exitoso',
+        message: 'Cuenta creada con Google exitosamente',
       );
 
-      // Navegar al home después del login con Google
+      // Navegar al home después del registro con Google
       AppRoutes.goToHome(context);
     } catch (e) {
       ToastUtils.showError(
         context: context,
-        message: 'Error al iniciar sesión con Google',
+        message: 'Error al crear cuenta con Google',
       );
     } finally {
       if (mounted) {
@@ -113,6 +105,23 @@ class _LoginFormState extends State<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Campo de nombre completo
+          CustomTextField(
+            label: 'Full Name',
+            hintText: 'Enter your full name',
+            controller: _fullNameController,
+            keyboardType: TextInputType.name,
+            isRequired: true,
+            validator: FormValidators.validateName,
+            prefixIcon: const Icon(
+              Icons.person_outline,
+              color: AppColors.textTertiary,
+              size: 20,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Campo de email
           CustomTextField(
             label: 'Email Address',
@@ -145,32 +154,32 @@ class _LoginFormState extends State<LoginForm> {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
 
-          // Enlace de "Forgot Password"
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => AppRoutes.goToForgotPassword(context),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: AutoSizeText(
-                'Forgot Password?',
-                style: AppTextStyles.link,
-                maxLines: 1,
-              ),
+          // Campo de confirmar contraseña
+          CustomTextField(
+            label: 'Confirm Password',
+            hintText: 'Confirm your password',
+            controller: _confirmPasswordController,
+            isPassword: true,
+            isRequired: true,
+            validator: (value) => FormValidators.validatePasswordConfirmation(
+              value,
+              _passwordController.text,
+            ),
+            prefixIcon: const Icon(
+              Icons.lock_outline,
+              color: AppColors.textTertiary,
+              size: 20,
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          // Botón de Sign In
+          // Botón de Sign Up
           CustomButton(
-            text: 'Sign In',
-            onPressed: _isLoading ? null : _handleLogin,
+            text: 'Sign Up',
+            onPressed: _isLoading ? null : _handleSignUp,
             isLoading: _isLoading,
             isFullWidth: true,
             type: ButtonType.primary,
@@ -179,27 +188,28 @@ class _LoginFormState extends State<LoginForm> {
           // Divider con texto
           const CustomDivider(text: 'or continue with'),
 
-          // Botón de Google Sign In
+          // Botón de Google Sign Up
           GoogleSignInButton(
-            onPressed: _isGoogleLoading ? null : _handleGoogleSignIn,
+            onPressed: _isGoogleLoading ? null : _handleGoogleSignUp,
             isLoading: _isGoogleLoading,
+            text: 'Continue with Google',
           ),
 
           const SizedBox(height: 32),
 
-          // Enlace para crear cuenta
+          // Enlace para iniciar sesión
           Center(
             child: Wrap(
               alignment: WrapAlignment.center,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
-                  "Don't have an account? ",
+                  "Already have an account? ",
                   style: AppTextStyles.body2,
                   textAlign: TextAlign.center,
                 ),
                 TextButton(
-                  onPressed: () => AppRoutes.goToSignUp(context),
+                  onPressed: () => AppRoutes.goToLogin(context),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 4,
@@ -208,7 +218,7 @@ class _LoginFormState extends State<LoginForm> {
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: Text('Sign Up', style: AppTextStyles.link),
+                  child: Text('Sign In', style: AppTextStyles.link),
                 ),
               ],
             ),
