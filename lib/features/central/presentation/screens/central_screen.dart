@@ -50,7 +50,8 @@ class _CentralScreenState extends State<CentralScreen> {
 
     switch (selectedIndex) {
       case 0:
-        return const HomeScreen();
+        return const OrganizerDashboardScreen();
+      // return const HomeScreen();
       case 1:
         return const PostScreen();
       case 2:
