@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:toastification/toastification.dart';
 
+import '/shared/shared.dart';
 import '/core/core.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MultiBlocProvider(providers: getListBloc(), child: const MyApp()));
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

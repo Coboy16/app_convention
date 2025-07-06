@@ -1,5 +1,6 @@
 export './admin/admin.dart';
 export './auth/auth.dart';
+export './central/central.dart';
 export './external_apis/external_apis.dart';
 export './home/home.dart';
 export './notifications/notifications.dart';

@@ -10,6 +10,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String forgotPassword = '/forgot-password';
+  static const String central = '/central';
   static const String home = '/home';
   static const String profile = '/profile';
   static const String settings = '/settings';
@@ -47,6 +48,12 @@ class AppRoutes {
         builder: (context, state) => const Scaffold(
           body: Center(child: Text('Forgot Password Screen - Por implementar')),
         ),
+      ),
+
+      GoRoute(
+        path: home,
+        name: 'central',
+        builder: (context, state) => const CentralScreen(),
       ),
 
       // Home (placeholder - crear después)
