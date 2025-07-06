@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:konecta/core/core.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '/features/posts/presentation/screens/screens.dart';
 import '/features/posts/presentation/widgets/widgets.dart';
 import '/features/posts/presentation/bloc/blocs.dart';
 
@@ -44,9 +45,11 @@ class _PostScreenState extends State<PostScreen> {
                   const Spacer(),
                   IconButton(
                     onPressed: () {
-                      ToastUtils.showInfo(
-                        context: context,
-                        message: 'Create post coming soon...',
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CreatePostScreen(),
+                        ),
                       );
                     },
                     icon: const Icon(
