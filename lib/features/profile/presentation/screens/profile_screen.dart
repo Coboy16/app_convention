@@ -94,126 +94,88 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               }
             },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  // Custom AppBar
-                  Container(
-                    color: AppColors.surface,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppResponsive.horizontalPadding(context),
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text('Perfil', style: AppTextStyles.h4),
-                        ),
-                        if (isUpdating) ...[
-                          const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.primary,
-                            ),
+            child: Container(
+              color: Colors.white,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  children: [
+                    // Custom AppBar
+                    const SizedBox(height: 60),
+
+                    ProfileHeaderWidget(
+                      profile: profile,
+                      onEditProfile: isUpdating
+                          ? null
+                          : () {
+                              _showEditProfileModal(context, profile);
+                            },
+                      onSettings: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
                           ),
-                          const SizedBox(width: 12),
-                        ],
-                        IconButton(
-                          onPressed: isUpdating
+                        );
+                      },
+                      onAvatarEdit: isUpdating
+                          ? null
+                          : () {
+                              _showAvatarEditModal(context);
+                            },
+                    ),
+
+                    // Stats (posts count from PostsBloc)
+                    BlocBuilder<PostsBloc, PostsState>(
+                      builder: (context, postsState) {
+                        final postsCount = postsState is PostsLoaded
+                            ? (postsState).posts.length
+                            : 0;
+
+                        return ProfileStatsWidget(
+                          postsCount: postsCount,
+                          onPostsTap: () {
+                            // Scroll to posts section
+                          },
+                        );
+                      },
+                    ),
+
+                    // Profile Info
+                    ProfileInfoWidget(profile: profile),
+
+                    const SizedBox(height: 20),
+
+                    // Posts Section
+                    BlocConsumer<PostsBloc, PostsState>(
+                      listener: (context, postsState) {
+                        if (postsState is PostsError) {
+                          ToastUtils.showError(
+                            context: context,
+                            message: (postsState).message,
+                          );
+                        }
+                      },
+                      builder: (context, postsState) {
+                        return ProfilePostsWidget(
+                          postsState: postsState,
+                          onAddPost: isUpdating
                               ? null
                               : () {
-                                  _showEditProfileModal(context, profile);
+                                  _showAddPostModal(context);
                                 },
-                          icon: const Icon(
-                            LucideIcons.penLine,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  ProfileHeaderWidget(
-                    profile: profile,
-                    onEditProfile: isUpdating
-                        ? null
-                        : () {
-                            _showEditProfileModal(context, profile);
+                          onDeletePost: (postId) {
+                            if (currentUserId != null) {
+                              _showDeletePostDialog(context, postId);
+                            }
                           },
-                    onSettings: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
-                        ),
-                      );
-                    },
-                    onAvatarEdit: isUpdating
-                        ? null
-                        : () {
-                            _showAvatarEditModal(context);
-                          },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Stats (posts count from PostsBloc)
-                  BlocBuilder<PostsBloc, PostsState>(
-                    builder: (context, postsState) {
-                      final postsCount = postsState is PostsLoaded
-                          ? (postsState).posts.length
-                          : 0;
-
-                      return ProfileStatsWidget(
-                        postsCount: postsCount,
-                        onPostsTap: () {
-                          // Scroll to posts section
-                        },
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Profile Info
-                  ProfileInfoWidget(profile: profile),
-
-                  const SizedBox(height: 20),
-
-                  // Posts Section
-                  BlocConsumer<PostsBloc, PostsState>(
-                    listener: (context, postsState) {
-                      if (postsState is PostsError) {
-                        ToastUtils.showError(
-                          context: context,
-                          message: (postsState).message,
                         );
-                      }
-                    },
-                    builder: (context, postsState) {
-                      return ProfilePostsWidget(
-                        postsState: postsState,
-                        onAddPost: isUpdating
-                            ? null
-                            : () {
-                                _showAddPostModal(context);
-                              },
-                        onDeletePost: (postId) {
-                          if (currentUserId != null) {
-                            _showDeletePostDialog(context, postId);
-                          }
-                        },
-                      );
-                    },
-                  ),
+                      },
+                    ),
 
-                  const SizedBox(height: 20),
-                ],
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
           );

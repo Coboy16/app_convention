@@ -105,4 +105,53 @@ void _initAuth() {
       deletePostUseCase: sl(),
     ),
   );
+  // Agregar lo de post
+  //---
+  _initFeedPosts();
+}
+
+void _initFeedPosts() {
+  // DataSources
+  sl.registerLazySingleton<FeedPostsRemoteDataSource>(
+    () => FeedPostsRemoteDataSourceImpl(
+      firestore: sl(),
+      storage: sl(),
+      auth: sl(),
+    ),
+  );
+
+  // Repositories
+  sl.registerLazySingleton<FeedPostsRepository>(
+    () => FeedPostsRepositoryImpl(
+      remoteDataSource: sl(),
+      connectionChecker: sl(),
+    ),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetAllFeedPostsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateFeedPostUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleFeedPostLikeUseCase(sl()));
+  sl.registerLazySingleton(() => GetFeedPostCommentsUseCase(sl()));
+  sl.registerLazySingleton(() => AddFeedCommentUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteFeedCommentUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleFeedCommentLikeUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllFeedStoriesUseCase(sl()));
+  sl.registerLazySingleton(() => CreateFeedStoryUseCase(sl()));
+  sl.registerLazySingleton(() => MarkFeedStoryAsViewedUseCase(sl()));
+
+  // BLoC
+  sl.registerFactory(
+    () => FeedPostsBloc(
+      getAllPostsUseCase: sl(),
+      createPostUseCase: sl(),
+      toggleLikeUseCase: sl(),
+      getCommentsUseCase: sl(),
+      addCommentUseCase: sl(),
+      toggleCommentLikeUseCase: sl(),
+      getAllStoriesUseCase: sl(),
+      createStoryUseCase: sl(),
+      markStoryAsViewedUseCase: sl(),
+    ),
+  );
 }

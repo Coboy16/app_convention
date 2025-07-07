@@ -14,7 +14,7 @@ List<SingleChildWidget> getListBloc() {
 
     BlocProvider(create: (context) => sl<ProfileBloc>()),
     BlocProvider(create: (context) => sl<PostsBloc>()),
-    BlocProvider(create: (context) => FeedBloc()),
+    BlocProvider(create: (context) => sl<FeedPostsBloc>()),
     BlocProvider(create: (context) => DashboardBloc()),
   ];
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '/features/posts/presentation/bloc/blocs.dart';
-import '/features/posts/data/data.dart';
+import '/features/posts/domain/entities/feed_story_entity.dart'; // CAMBIADO
 import '/core/core.dart';
 
 class StoryViewerScreen extends StatefulWidget {
-  final List<StoryModel> stories;
+  final List<FeedStoryEntity> stories; // CAMBIADO
   final int initialIndex;
 
   const StoryViewerScreen({
@@ -27,7 +28,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   late Animation<double> _progressAnimation;
 
   int _currentIndex = 0;
-  static const Duration _storyDuration = Duration(seconds: 60);
+  static const Duration _storyDuration = Duration(
+    seconds: 5,
+  ); // Reducido a 5 segundos
 
   @override
   void initState() {
@@ -60,7 +63,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 
     // Marcar como vista
     if (_currentIndex < widget.stories.length) {
-      context.read<FeedBloc>().viewStory(widget.stories[_currentIndex].id);
+      context.read<FeedPostsBloc>().viewStory(
+        widget.stories[_currentIndex].id,
+      ); // CAMBIADO
     }
   }
 
@@ -188,7 +193,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: AppColors.surfaceVariant,
-                    child: _getInitials(widget.stories[_currentIndex].username),
+                    backgroundImage:
+                        widget.stories[_currentIndex].avatarUrl != null
+                        ? CachedNetworkImageProvider(
+                            widget.stories[_currentIndex].avatarUrl!,
+                          )
+                        : null,
+                    child: widget.stories[_currentIndex].avatarUrl == null
+                        ? _getInitials(widget.stories[_currentIndex].username)
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -262,7 +275,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
 }
 
 class _StoryContent extends StatelessWidget {
-  final StoryModel story;
+  final FeedStoryEntity story; // CAMBIADO
 
   const _StoryContent({required this.story});
 
@@ -271,45 +284,88 @@ class _StoryContent extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.primary.withOpacity(0.3),
-            AppColors.primaryDark.withOpacity(0.8),
-          ],
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          // Placeholder para imagen
-          Container(
-            width: 200,
-            height: 300,
-            decoration: BoxDecoration(
+          // Background image
+          CachedNetworkImage(
+            imageUrl: story.imageUrl,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            placeholder: (context, url) => Container(
               color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(16),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
+              ),
             ),
-            child: const Icon(
-              LucideIcons.image,
-              color: AppColors.textTertiary,
-              size: 64,
+            errorWidget: (context, url, error) => Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.primary.withOpacity(0.3),
+                    AppColors.primaryDark.withOpacity(0.8),
+                  ],
+                ),
+              ),
+              child: const Center(
+                child: Icon(
+                  LucideIcons.imageOff,
+                  color: Colors.white,
+                  size: 64,
+                ),
+              ),
             ),
           ),
 
-          const SizedBox(height: 24),
-
-          // Caption
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              story.caption,
-              style: AppTextStyles.body1.copyWith(color: Colors.white),
-              textAlign: TextAlign.center,
+          // Gradient overlay for better text readability
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.3),
+                  Colors.black.withOpacity(0.7),
+                ],
+                stops: const [0.0, 0.7, 1.0],
+              ),
             ),
           ),
+
+          // Caption at bottom
+          if (story.caption.isNotEmpty)
+            Positioned(
+              bottom: 100,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  story.caption,
+                  style: AppTextStyles.body1.copyWith(
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(1, 1),
+                        blurRadius: 3.0,
+                        color: Colors.black.withOpacity(0.5),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
         ],
       ),
     );
