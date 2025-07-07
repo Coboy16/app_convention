@@ -99,6 +99,10 @@ ${post.hashtags.isNotEmpty ? post.hashtags.join(' ') : ''}
                       context: context,
                       message: 'Historia creada exitosamente',
                     );
+                  } else if (state is FeedStoryViewed) {
+                    debugPrint(
+                      '✅ Historia vista manejada en UI: ${state.storyId}',
+                    );
                   }
                 },
                 builder: (context, state) {
@@ -113,7 +117,8 @@ ${post.hashtags.isNotEmpty ? post.hashtags.join(' ') : ''}
                   if (state is FeedPostsLoaded ||
                       state is FeedPostCreating ||
                       state is FeedCommentsLoaded ||
-                      state is FeedStoriesLoaded) {
+                      state is FeedStoriesLoaded ||
+                      state is FeedStoryViewed) {
                     List<FeedPostEntity> posts = [];
                     List<FeedStoryEntity> stories = [];
 
@@ -131,6 +136,13 @@ ${post.hashtags.isNotEmpty ? post.hashtags.join(' ') : ''}
                       }
                     } else if (state is FeedStoriesLoaded) {
                       stories = state.stories;
+                    } else if (state is FeedStoryViewed) {
+                      final bloc = context.read<FeedPostsBloc>();
+                      final previousState = bloc.state;
+                      if (previousState is FeedPostsLoaded) {
+                        posts = previousState.posts;
+                        stories = previousState.stories;
+                      }
                     }
 
                     return RefreshIndicator(

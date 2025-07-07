@@ -1,115 +1,142 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '/features/home/data/data.dart';
+import '../../domain/entities/dashboard_entity.dart';
 import '/core/core.dart';
 
 class TodayHighlightsWidget extends StatelessWidget {
-  final List<TodayHighlight> highlights;
+  final List<TodayHighlightEntity> highlights;
+  final Function(TodayHighlightEntity)? onHighlightTap;
 
-  const TodayHighlightsWidget({super.key, required this.highlights});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Lo más destacado de hoy', style: AppTextStyles.h4),
-        const SizedBox(height: 16),
-
-        Row(
-          children: highlights
-              .map(
-                (highlight) => Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(
-                      right:
-                          highlights.indexOf(highlight) < highlights.length - 1
-                          ? 12
-                          : 0,
-                    ),
-                    child: _HighlightCard(highlight: highlight),
-                  ),
-                ),
-              )
-              .toList(),
-        ),
-      ],
-    );
-  }
-}
-
-class _HighlightCard extends StatelessWidget {
-  final TodayHighlight highlight;
-
-  const _HighlightCard({required this.highlight});
+  const TodayHighlightsWidget({
+    super.key,
+    required this.highlights,
+    this.onHighlightTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = _parseColor(highlight.color);
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.inputBorder.withOpacity(0.3)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              _getIconData(highlight.icon),
-              color: AppColors.surface,
-              size: 24,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  LucideIcons.star,
+                  color: AppColors.warning,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text('Lo Más Destacado de Hoy', style: AppTextStyles.h4),
+            ],
           ),
-          const SizedBox(height: 12),
-          AutoSizeText(
-            highlight.title,
-            style: AppTextStyles.labelMedium,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-          ),
-          const SizedBox(height: 4),
-          AutoSizeText(
-            highlight.time,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-          ),
+          const SizedBox(height: 16),
+          ...highlights
+              .take(3)
+              .map((highlight) => _buildHighlightItem(highlight))
+              .toList(),
         ],
       ),
     );
   }
 
-  Color _parseColor(String colorString) {
-    try {
-      return Color(int.parse(colorString.replaceFirst('#', '0xFF')));
-    } catch (e) {
-      return AppColors.primary;
+  Widget _buildHighlightItem(TodayHighlightEntity highlight) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => onHighlightTap?.call(highlight),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceVariant.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.inputBorder.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getTypeColor(highlight.type).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  _getTypeIcon(highlight.type),
+                  color: _getTypeColor(highlight.type),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(highlight.title, style: AppTextStyles.labelMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      highlight.time,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                LucideIcons.chevronRight,
+                color: AppColors.textTertiary,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getTypeColor(HighlightType type) {
+    switch (type) {
+      case HighlightType.session:
+        return AppColors.primary;
+      case HighlightType.breaki:
+        return AppColors.success;
+      case HighlightType.networking:
+        return AppColors.info;
+      case HighlightType.workshop:
+        return AppColors.warning;
+      case HighlightType.keynote:
+        return AppColors.error;
     }
   }
 
-  IconData _getIconData(String iconName) {
-    switch (iconName) {
-      case 'microphone':
-        return LucideIcons.mic;
-      case 'utensils':
-        return LucideIcons.utensils;
-      case 'users':
+  IconData _getTypeIcon(HighlightType type) {
+    switch (type) {
+      case HighlightType.session:
+        return LucideIcons.presentation;
+      case HighlightType.breaki:
+        return LucideIcons.coffee;
+      case HighlightType.networking:
         return LucideIcons.users;
-      default:
-        return LucideIcons.calendar;
+      case HighlightType.workshop:
+        return LucideIcons.wrench;
+      case HighlightType.keynote:
+        return LucideIcons.mic;
     }
   }
 }

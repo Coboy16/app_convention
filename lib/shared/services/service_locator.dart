@@ -107,7 +107,53 @@ void _initAuth() {
   );
   // Agregar lo de post
   //---
+  _initDashboardDependencies();
   _initFeedPosts();
+}
+
+void _initDashboardDependencies() {
+  // External
+  if (!sl.isRegistered<FirebaseFirestore>()) {
+    sl.registerLazySingleton<FirebaseFirestore>(
+      () => FirebaseFirestore.instance,
+    );
+  }
+  if (!sl.isRegistered<InternetConnectionChecker>()) {
+    sl.registerLazySingleton<InternetConnectionChecker>(
+      () => InternetConnectionChecker(),
+    );
+  }
+
+  // Data sources
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardRemoteDataSourceImpl(firestore: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(
+      remoteDataSource: sl(),
+      connectionChecker: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetDashboardUseCase(sl()));
+  sl.registerLazySingleton(() => GetTodayHighlightsUseCase(sl()));
+  sl.registerLazySingleton(() => GetRecentUpdatesUseCase(sl()));
+  sl.registerLazySingleton(() => GetAvailableSurveysUseCase(sl()));
+  sl.registerLazySingleton(() => SubmitSurveyResponseUseCase(sl()));
+
+  // BLoC
+  sl.registerFactory(
+    () => DashboardBloc(
+      getDashboardUseCase: sl(),
+      getTodayHighlightsUseCase: sl(),
+      getRecentUpdatesUseCase: sl(),
+      getAvailableSurveysUseCase: sl(),
+      submitSurveyResponseUseCase: sl(),
+    ),
+  );
 }
 
 void _initFeedPosts() {

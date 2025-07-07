@@ -50,7 +50,7 @@ class LoginScreen extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: AppResponsive.isMobile(context) ? 20 : 48),
+            SizedBox(height: AppResponsive.isMobile(context) ? 18 : 48),
 
             // Card con el formulario de login
             Container(
@@ -59,7 +59,7 @@ class LoginScreen extends StatelessWidget {
                 maxWidth: AppResponsive.maxContentWidth(context),
               ),
               padding: EdgeInsets.all(
-                AppResponsive.isMobile(context) ? 24 : 32,
+                AppResponsive.isMobile(context) ? 18 : 32,
               ),
               decoration: BoxDecoration(
                 color: AppColors.surface,
@@ -94,7 +94,7 @@ class LoginScreen extends StatelessWidget {
                     ],
                   ),
 
-                  SizedBox(height: AppResponsive.isMobile(context) ? 24 : 32),
+                  SizedBox(height: AppResponsive.isMobile(context) ? 18 : 32),
 
                   // Formulario de login
                   const LoginForm(),
@@ -102,7 +102,7 @@ class LoginScreen extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: AppResponsive.isMobile(context) ? 24 : 32),
+            SizedBox(height: AppResponsive.isMobile(context) ? 18 : 32),
 
             // Footer con términos y condiciones
             _buildFooter(context),

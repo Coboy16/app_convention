@@ -237,27 +237,51 @@ class _EditProfileFormWidgetState extends State<EditProfileFormWidget> {
 
         const SizedBox(height: 20),
 
-        // Your Posts Section
-        _SectionHeader(icon: LucideIcons.camera, title: 'Tus Posts'),
+        Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5),
+          child: Container(
+            padding: const EdgeInsets.only(left: 15, right: 15, top: 15),
 
-        const SizedBox(height: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Your Posts Section
+                _SectionHeader(icon: LucideIcons.camera, title: 'Tus Posts'),
 
-        // Posts management section
-        _PostsManagementSection(
-          userId: widget.userId,
-          tempImages: widget.tempPostImages,
-          onAddImage: widget.onAddTempImage,
-          onRemoveImage: widget.onRemoveTempImage,
-          postsToDelete: _postsToDelete,
-          onMarkForDeletion: (postId) {
-            setState(() {
-              if (_postsToDelete.contains(postId)) {
-                _postsToDelete.remove(postId);
-              } else {
-                _postsToDelete.add(postId);
-              }
-            });
-          },
+                const SizedBox(height: 16),
+
+                // Posts management section
+                _PostsManagementSection(
+                  userId: widget.userId,
+                  tempImages: widget.tempPostImages,
+                  onAddImage: widget.onAddTempImage,
+                  onRemoveImage: widget.onRemoveTempImage,
+                  postsToDelete: _postsToDelete,
+                  onMarkForDeletion: (postId) {
+                    setState(() {
+                      if (_postsToDelete.contains(postId)) {
+                        _postsToDelete.remove(postId);
+                      } else {
+                        _postsToDelete.add(postId);
+                      }
+                    });
+                  },
+                ),
+
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
         ),
 
         const SizedBox(height: 24),

@@ -306,18 +306,62 @@ class FeedPostsBloc extends Bloc<FeedPostsEvent, FeedPostsState> {
   ) async {
     debugPrint('🔄 FeedStoryViewRequested para historia: ${event.storyId}');
 
-    final result = await markStoryAsViewedUseCase(event.storyId);
+    // IMPORTANTE: No cambiar el estado, solo actualizar en segundo plano
+    final currentState = state;
 
-    result.fold(
-      (failure) {
-        debugPrint('❌ Error al marcar historia como vista: ${failure.message}');
-        // No emitir error, es una operación en segundo plano
-      },
-      (_) {
-        debugPrint('✅ Historia marcada como vista: ${event.storyId}');
-        emit(FeedStoryViewed(storyId: event.storyId));
-      },
-    );
+    // Solo proceder si tenemos un estado válido
+    if (currentState is! FeedPostsLoaded) {
+      debugPrint(
+        '⚠️ Estado actual no es FeedPostsLoaded, saltando vista de historia',
+      );
+      return;
+    }
+
+    try {
+      final result = await markStoryAsViewedUseCase(event.storyId);
+
+      result.fold(
+        (failure) {
+          debugPrint(
+            '❌ Error al marcar historia como vista: ${failure.message}',
+          );
+        },
+        (_) {
+          debugPrint('✅ Historia marcada como vista: ${event.storyId}');
+
+          final updatedStories = currentState.stories.map((story) {
+            if (story.id == event.storyId) {
+              return story.copyWith(isViewedByCurrentUser: true);
+            }
+            return story;
+          }).toList();
+
+          if (mounted) {
+            emit(
+              FeedPostsLoaded(
+                posts: currentState.posts,
+                stories: updatedStories,
+              ),
+            );
+            debugPrint(
+              '🔄 Estado actualizado localmente para historia: ${event.storyId}',
+            );
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('❌ Excepción al marcar historia como vista: $e');
+      // No emitir error
+    }
+  }
+
+  bool get mounted {
+    try {
+      // Verificar si el estado aún es válido
+      return state is FeedPostsLoaded;
+    } catch (e) {
+      return false;
+    }
   }
 
   // Métodos helper para uso externo

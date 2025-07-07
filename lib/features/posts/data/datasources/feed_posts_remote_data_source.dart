@@ -403,7 +403,7 @@ class FeedPostsRemoteDataSourceImpl implements FeedPostsRemoteDataSource {
       debugPrint('🔍 Obteniendo todas las historias');
 
       // Filtrar historias no expiradas (últimas 24 horas)
-      final dayAgo = DateTime.now().subtract(const Duration(hours: 24));
+      DateTime.now().subtract(const Duration(hours: 24));
 
       final querySnapshot = await firestore
           .collection('feed_stories')
@@ -491,7 +491,7 @@ class FeedPostsRemoteDataSourceImpl implements FeedPostsRemoteDataSource {
         'viewedBy': FieldValue.arrayUnion([_currentUserId]),
       });
 
-      debugPrint('✅ Historia marcada como vista');
+      debugPrint('✅ Historia marcada como vista 222');
     } catch (e) {
       debugPrint('❌ Error al marcar historia como vista: ${e.toString()}');
       throw ServerException(

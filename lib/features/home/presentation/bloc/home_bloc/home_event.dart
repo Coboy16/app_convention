@@ -8,12 +8,54 @@ abstract class DashboardEvent extends Equatable {
 }
 
 class DashboardLoadRequested extends DashboardEvent {
-  final UserRole userRole;
+  final String eventId;
 
-  const DashboardLoadRequested({required this.userRole});
+  const DashboardLoadRequested({required this.eventId});
 
   @override
-  List<Object> get props => [userRole];
+  List<Object> get props => [eventId];
 }
 
 class DashboardRefreshRequested extends DashboardEvent {}
+
+class TodayHighlightsLoadRequested extends DashboardEvent {
+  final String eventId;
+
+  const TodayHighlightsLoadRequested({required this.eventId});
+
+  @override
+  List<Object> get props => [eventId];
+}
+
+class RecentUpdatesLoadRequested extends DashboardEvent {
+  final String eventId;
+
+  const RecentUpdatesLoadRequested({required this.eventId});
+
+  @override
+  List<Object> get props => [eventId];
+}
+
+class AvailableSurveysLoadRequested extends DashboardEvent {
+  final String eventId;
+
+  const AvailableSurveysLoadRequested({required this.eventId});
+
+  @override
+  List<Object> get props => [eventId];
+}
+
+class SurveyResponseSubmitted extends DashboardEvent {
+  final String surveyId;
+  final String userId;
+  final Map<String, dynamic> responses;
+
+  const SurveyResponseSubmitted({
+    required this.surveyId,
+    required this.userId,
+    required this.responses,
+  });
+
+  @override
+  List<Object> get props => [surveyId, userId, responses];
+}

@@ -11,11 +11,11 @@ List<SingleChildWidget> getListBloc() {
     BlocProvider(create: (context) => sl<AuthBloc>()),
 
     BlocProvider(create: (context) => NavigationBloc()),
+    BlocProvider(create: (context) => sl<DashboardBloc>()),
 
     BlocProvider(create: (context) => sl<ProfileBloc>()),
     BlocProvider(create: (context) => sl<PostsBloc>()),
     BlocProvider(create: (context) => sl<FeedPostsBloc>()),
-    BlocProvider(create: (context) => DashboardBloc()),
   ];
 }
 

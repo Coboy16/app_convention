@@ -129,17 +129,17 @@ class ProfileInfoWidget extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: Colors.amber.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.error.withOpacity(0.3),
+                      color: Colors.amber.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
                   child: AutoSizeText(
                     allergy,
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.error,
+                      color: Colors.amber.shade900,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
