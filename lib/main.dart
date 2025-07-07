@@ -7,13 +7,31 @@ import 'package:toastification/toastification.dart';
 import '/shared/shared.dart';
 import '/core/core.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await FirebaseService.initializeFirebase();
+
+  await initializeDependencies();
+
   runApp(MultiBlocProvider(providers: getListBloc(), child: const MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthBloc>().add(AuthCheckRequested());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
