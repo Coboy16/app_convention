@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:konecta/core/core.dart';
+import 'package:konecta/features/posts/domain/domain.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '/features/posts/presentation/screens/screens.dart';
@@ -19,9 +19,9 @@ class _PostScreenState extends State<PostScreen> {
   @override
   void initState() {
     super.initState();
-    final currentState = context.read<FeedBloc>().state;
-    if (currentState is FeedInitial) {
-      context.read<FeedBloc>().loadFeed();
+    final currentState = context.read<FeedPostsBloc>().state;
+    if (currentState is FeedPostsInitial) {
+      context.read<FeedPostsBloc>().loadFeed();
     }
   }
 
@@ -64,23 +64,31 @@ class _PostScreenState extends State<PostScreen> {
 
             // Content
             Expanded(
-              child: BlocConsumer<FeedBloc, FeedState>(
+              child: BlocConsumer<FeedPostsBloc, FeedPostsState>(
                 listener: (context, state) {
-                  if (state is FeedError) {
+                  if (state is FeedPostsError) {
                     ToastUtils.showError(
                       context: context,
                       message: state.message,
                     );
-                  } else if (state is PostLikeUpdated) {
-                    // Opcional: mostrar feedback de like
+                  } else if (state is FeedCommentAdded) {
+                    ToastUtils.showSuccess(
+                      context: context,
+                      message: 'Comentario agregado',
+                    );
+                  } else if (state is FeedStoryCreated) {
+                    ToastUtils.showSuccess(
+                      context: context,
+                      message: 'Historia creada exitosamente',
+                    );
                   }
                 },
                 builder: (context, state) {
-                  if (state is FeedLoading) {
+                  if (state is FeedPostsLoading) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  if (state is FeedError) {
+                  if (state is FeedPostsError) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -101,7 +109,7 @@ class _PostScreenState extends State<PostScreen> {
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
                             onPressed: () {
-                              context.read<FeedBloc>().loadFeed();
+                              context.read<FeedPostsBloc>().loadFeed();
                             },
                             icon: const Icon(LucideIcons.refreshCw),
                             label: const Text('Retry'),
@@ -111,25 +119,62 @@ class _PostScreenState extends State<PostScreen> {
                     );
                   }
 
-                  if (state is FeedLoaded) {
+                  if (state is FeedPostsLoaded ||
+                      state is FeedPostCreating ||
+                      state is FeedCommentsLoaded ||
+                      state is FeedStoriesLoaded) {
+                    List<FeedPostEntity> posts = [];
+                    List<FeedStoryEntity> stories = [];
+
+                    if (state is FeedPostsLoaded) {
+                      posts = state.posts;
+                      stories = state.stories;
+                    } else if (state is FeedPostCreating) {
+                      posts = state.currentPosts;
+                      stories = state.currentStories;
+                    } else if (state is FeedCommentsLoaded) {
+                      // Mantener estado anterior
+                      final previousState = context.read<FeedPostsBloc>().state;
+                      if (previousState is FeedPostsLoaded) {
+                        posts = previousState.posts;
+                        stories = previousState.stories;
+                      }
+                    } else if (state is FeedStoriesLoaded) {
+                      stories = state.stories;
+                    }
+
                     return RefreshIndicator(
                       onRefresh: () async {
-                        context.read<FeedBloc>().refreshFeed();
+                        context.read<FeedPostsBloc>().refreshFeed();
                       },
                       child: CustomScrollView(
                         slivers: [
                           // Stories section
                           SliverToBoxAdapter(
                             child: StoriesSectionWidget(
-                              stories: state.stories,
+                              stories: stories,
                               onAddStory: () {
-                                ToastUtils.showInfo(
-                                  context: context,
-                                  message: 'Add story coming soon...',
-                                );
+                                _showCreateStoryModal(context);
                               },
                             ),
                           ),
+
+                          // Loading indicator for creating post
+                          if (state is FeedPostCreating)
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(
+                                  child: Column(
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 8),
+                                      Text('Creando post...'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
 
                           // Posts list
                           SliverList(
@@ -137,16 +182,22 @@ class _PostScreenState extends State<PostScreen> {
                               context,
                               index,
                             ) {
-                              final post = state.posts[index];
+                              final post = posts[index];
                               return PostItemWidget(
                                 post: post,
                                 onLike: () {
-                                  context.read<FeedBloc>().togglePostLike(
+                                  context.read<FeedPostsBloc>().togglePostLike(
                                     post.id,
                                   );
                                 },
                                 onComment: () {
-                                  // Handled by PostItemWidget (opens detail)
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PostDetailScreen(post: post),
+                                    ),
+                                  );
                                 },
                                 onShare: () {
                                   ToastUtils.showInfo(
@@ -156,7 +207,7 @@ class _PostScreenState extends State<PostScreen> {
                                   );
                                 },
                               );
-                            }, childCount: state.posts.length),
+                            }, childCount: posts.length),
                           ),
 
                           // Bottom padding
@@ -171,6 +222,91 @@ class _PostScreenState extends State<PostScreen> {
                 },
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCreateStoryModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Crear Historia', style: AppTextStyles.h4),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _StoryOption(
+                  icon: LucideIcons.camera,
+                  label: 'Cámara',
+                  onTap: () {
+                    Navigator.pop(context);
+                    // TODO: Implementar captura de imagen para historia
+                    ToastUtils.showInfo(
+                      context: context,
+                      message: 'Función de cámara próximamente...',
+                    );
+                  },
+                ),
+                _StoryOption(
+                  icon: LucideIcons.image,
+                  label: 'Galería',
+                  onTap: () {
+                    Navigator.pop(context);
+                    // TODO: Implementar selección de imagen para historia
+                    ToastUtils.showInfo(
+                      context: context,
+                      message: 'Función de galería próximamente...',
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StoryOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _StoryOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.inputBorder, width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppColors.primary, size: 32),
+            const SizedBox(height: 8),
+            Text(label, style: AppTextStyles.labelMedium),
           ],
         ),
       ),

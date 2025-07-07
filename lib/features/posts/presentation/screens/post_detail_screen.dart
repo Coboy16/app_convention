@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '/features/posts/presentation/widgets/widgets.dart';
 import '/features/posts/presentation/bloc/blocs.dart';
-import '/features/posts/data/data.dart';
+import '/features/posts/domain/entities/feed_post_entity.dart'; // CAMBIADO
+import '/features/posts/domain/entities/feed_comment_entity.dart'; // CAMBIADO
 import '/core/core.dart';
 
 class PostDetailScreen extends StatefulWidget {
-  final PostTwoModel post;
+  final FeedPostEntity post; // CAMBIADO
 
   const PostDetailScreen({super.key, required this.post});
 
@@ -21,7 +22,7 @@ class PostDetailScreen extends StatefulWidget {
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final _commentController = TextEditingController();
   final _scrollController = ScrollController();
-  List<CommentModel> _comments = [];
+  List<FeedCommentEntity> _comments = []; // CAMBIADO
   bool _isLoadingComments = false;
 
   @override
@@ -41,13 +42,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     setState(() {
       _isLoadingComments = true;
     });
-    context.read<FeedBloc>().loadComments(widget.post.id);
+    context.read<FeedPostsBloc>().loadComments(widget.post.id); // CAMBIADO
   }
 
   void _addComment() {
     final content = _commentController.text.trim();
     if (content.isNotEmpty) {
-      context.read<FeedBloc>().addComment(widget.post.id, content);
+      context.read<FeedPostsBloc>().addComment(
+        widget.post.id,
+        content,
+      ); // CAMBIADO
       _commentController.clear();
       FocusScope.of(context).unfocus();
     }
@@ -101,14 +105,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
             // Content
             Expanded(
-              child: BlocListener<FeedBloc, FeedState>(
+              child: BlocListener<FeedPostsBloc, FeedPostsState>(
+                // CAMBIADO
                 listener: (context, state) {
-                  if (state is CommentsLoaded) {
+                  if (state is FeedCommentsLoaded) {
+                    // CAMBIADO
                     setState(() {
                       _comments = state.comments;
                       _isLoadingComments = false;
                     });
-                  } else if (state is CommentAdded) {
+                  } else if (state is FeedCommentAdded) {
+                    // CAMBIADO
                     setState(() {
                       _comments.insert(0, state.comment);
                     });
@@ -135,6 +142,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       _CommentsSection(
                         comments: _comments,
                         isLoading: _isLoadingComments,
+                        onCommentLike: (commentId) {
+                          context.read<FeedPostsBloc>().toggleCommentLike(
+                            commentId,
+                          ); // CAMBIADO
+                        },
                       ),
                     ],
                   ),
@@ -152,7 +164,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 }
 
 class _PostContent extends StatelessWidget {
-  final PostTwoModel post;
+  final FeedPostEntity post; // CAMBIADO
 
   const _PostContent({required this.post});
 
@@ -171,7 +183,7 @@ class _PostContent extends StatelessWidget {
           // Post Header
           Row(
             children: [
-              if (post.type == PostType.admin)
+              if (post.type == FeedPostType.admin) // CAMBIADO
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -194,7 +206,12 @@ class _PostContent extends StatelessWidget {
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: AppColors.surfaceVariant,
-                  child: _getInitials(post.username),
+                  backgroundImage: post.avatarUrl != null
+                      ? CachedNetworkImageProvider(post.avatarUrl!)
+                      : null,
+                  child: post.avatarUrl == null
+                      ? _getInitials(post.username)
+                      : null,
                 ),
 
               const SizedBox(width: 12),
@@ -211,10 +228,10 @@ class _PostContent extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (post.role != null) ...[
+                        if (post.userRole != null) ...[
                           const SizedBox(width: 8),
                           AutoSizeText(
-                            '(${post.role})',
+                            '(${post.userRole})', // CAMBIADO
                             style: AppTextStyles.body2.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -241,25 +258,28 @@ class _PostContent extends StatelessWidget {
           // Post content
           AutoSizeText(post.content, style: AppTextStyles.body1),
 
-          // Post image placeholder
-          if (post.imageUrl != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              height: 250,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.inputBorder, width: 1),
-              ),
-              child: const Center(
-                child: Icon(
-                  LucideIcons.image,
-                  color: AppColors.textTertiary,
-                  size: 64,
-                ),
-              ),
+          // Hashtags
+          if (post.hashtags.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: post.hashtags.map((hashtag) {
+                return Text(
+                  hashtag,
+                  style: AppTextStyles.body2.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                );
+              }).toList(),
             ),
+          ],
+
+          // Post images
+          if (post.imageUrls.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildImageSection(),
           ],
 
           const SizedBox(height: 16),
@@ -268,10 +288,14 @@ class _PostContent extends StatelessWidget {
           Row(
             children: [
               Icon(
-                post.isLiked ? LucideIcons.heart : LucideIcons.heart,
-                color: post.isLiked ? AppColors.error : AppColors.textTertiary,
+                post.isLikedByCurrentUser
+                    ? LucideIcons.heart
+                    : LucideIcons.heart, // CAMBIADO
+                color: post.isLikedByCurrentUser
+                    ? AppColors.error
+                    : AppColors.textTertiary, // CAMBIADO
                 size: 20,
-                fill: post.isLiked ? 1.0 : 0.0,
+                fill: post.isLikedByCurrentUser ? 1.0 : 0.0, // CAMBIADO
               ),
               const SizedBox(width: 4),
               AutoSizeText(
@@ -300,6 +324,95 @@ class _PostContent extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildImageSection() {
+    if (post.imageUrls.isEmpty) return const SizedBox.shrink();
+
+    if (post.imageUrls.length == 1) {
+      // Single image
+      return Container(
+        width: double.infinity,
+        height: 250,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.inputBorder, width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: CachedNetworkImage(
+            imageUrl: post.imageUrls.first,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              color: AppColors.surfaceVariant,
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: AppColors.surfaceVariant,
+              child: const Center(
+                child: Icon(
+                  LucideIcons.imageOff,
+                  color: AppColors.textTertiary,
+                  size: 64,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Multiple images in grid
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1,
+        ),
+        itemCount: post.imageUrls.length,
+        itemBuilder: (context, index) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.inputBorder, width: 1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: post.imageUrls[index],
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: AppColors.surfaceVariant,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: AppColors.surfaceVariant,
+                  child: const Center(
+                    child: Icon(
+                      LucideIcons.imageOff,
+                      color: AppColors.textTertiary,
+                      size: 32,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
   }
 
   Widget _getInitials(String name) {
@@ -338,10 +451,15 @@ class _PostContent extends StatelessWidget {
 }
 
 class _CommentsSection extends StatelessWidget {
-  final List<CommentModel> comments;
+  final List<FeedCommentEntity> comments; // CAMBIADO
   final bool isLoading;
+  final Function(String) onCommentLike;
 
-  const _CommentsSection({required this.comments, required this.isLoading});
+  const _CommentsSection({
+    required this.comments,
+    required this.isLoading,
+    required this.onCommentLike,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -383,7 +501,10 @@ class _CommentsSection extends StatelessWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final comment = comments[index];
-              return CommentItemWidget(comment: comment);
+              return CommentItemWidget(
+                comment: comment,
+                onLike: () => onCommentLike(comment.id),
+              );
             },
           ),
       ],

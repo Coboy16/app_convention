@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '/features/posts/presentation/screens/screens.dart';
-
-import '/features/posts/data/data.dart';
+import '/features/posts/domain/entities/feed_post_entity.dart'; // CAMBIADO
 import '/core/core.dart';
 
 class PostItemWidget extends StatelessWidget {
-  final PostTwoModel post;
+  final FeedPostEntity post; // CAMBIADO
   final VoidCallback onLike;
   final VoidCallback onComment;
   final VoidCallback onShare;
@@ -38,7 +38,7 @@ class PostItemWidget extends StatelessWidget {
           Row(
             children: [
               // Admin badge or user avatar
-              if (post.type == PostType.admin)
+              if (post.type == FeedPostType.admin) // CAMBIADO
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -61,7 +61,12 @@ class PostItemWidget extends StatelessWidget {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: AppColors.surfaceVariant,
-                  child: _getInitials(post.username),
+                  backgroundImage: post.avatarUrl != null
+                      ? CachedNetworkImageProvider(post.avatarUrl!)
+                      : null,
+                  child: post.avatarUrl == null
+                      ? _getInitials(post.username)
+                      : null,
                 ),
 
               const SizedBox(width: 12),
@@ -79,10 +84,10 @@ class PostItemWidget extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (post.role != null) ...[
+                        if (post.userRole != null) ...[
                           const SizedBox(width: 8),
                           AutoSizeText(
-                            '(${post.role})',
+                            '(${post.userRole})', // CAMBIADO de post.role
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -131,28 +136,28 @@ class PostItemWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                // Post image placeholder
-                if (post.imageUrl != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.inputBorder,
-                        width: 1,
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        LucideIcons.image,
-                        color: AppColors.textTertiary,
-                        size: 48,
-                      ),
-                    ),
+                // Hashtags
+                if (post.hashtags.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: post.hashtags.map((hashtag) {
+                      return Text(
+                        hashtag,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      );
+                    }).toList(),
                   ),
+                ],
+
+                // Post images
+                if (post.imageUrls.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildImageSection(),
                 ],
               ],
             ),
@@ -165,9 +170,11 @@ class PostItemWidget extends StatelessWidget {
             children: [
               // Like button
               _ActionButton(
-                icon: post.isLiked ? LucideIcons.heart : LucideIcons.heart,
+                icon: post.isLikedByCurrentUser
+                    ? LucideIcons.heart
+                    : LucideIcons.heart, // CAMBIADO
                 label: post.likesCount.toString(),
-                isActive: post.isLiked,
+                isActive: post.isLikedByCurrentUser, // CAMBIADO
                 onTap: onLike,
               ),
 
@@ -189,6 +196,120 @@ class PostItemWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildImageSection() {
+    if (post.imageUrls.isEmpty) return const SizedBox.shrink();
+
+    if (post.imageUrls.length == 1) {
+      // Single image
+      return Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.inputBorder, width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: CachedNetworkImage(
+            imageUrl: post.imageUrls.first,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              color: AppColors.surfaceVariant,
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: AppColors.surfaceVariant,
+              child: const Center(
+                child: Icon(
+                  LucideIcons.imageOff,
+                  color: AppColors.textTertiary,
+                  size: 48,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Multiple images
+      return SizedBox(
+        height: 200,
+        child: PageView.builder(
+          itemCount: post.imageUrls.length,
+          itemBuilder: (context, index) {
+            return Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.inputBorder, width: 1),
+              ),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: post.imageUrls[index],
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      placeholder: (context, url) => Container(
+                        color: AppColors.surfaceVariant,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.surfaceVariant,
+                        child: const Center(
+                          child: Icon(
+                            LucideIcons.imageOff,
+                            color: AppColors.textTertiary,
+                            size: 48,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Image counter
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${index + 1}/${post.imageUrls.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
   }
 
   Widget _getInitials(String name) {

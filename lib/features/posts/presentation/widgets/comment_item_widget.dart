@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-import '/features/posts/data/data.dart';
+import '/features/posts/domain/entities/feed_comment_entity.dart'; // CAMBIADO
 import '/core/core.dart';
 
 class CommentItemWidget extends StatelessWidget {
-  final CommentModel comment;
+  final FeedCommentEntity comment; // CAMBIADO
+  final VoidCallback? onLike;
 
-  const CommentItemWidget({super.key, required this.comment});
+  const CommentItemWidget({super.key, required this.comment, this.onLike});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,12 @@ class CommentItemWidget extends StatelessWidget {
           CircleAvatar(
             radius: 16,
             backgroundColor: AppColors.surfaceVariant,
-            child: _getInitials(comment.username),
+            backgroundImage: comment.avatarUrl != null
+                ? CachedNetworkImageProvider(comment.avatarUrl!)
+                : null,
+            child: comment.avatarUrl == null
+                ? _getInitials(comment.username)
+                : null,
           ),
 
           const SizedBox(width: 12),
@@ -69,9 +76,7 @@ class CommentItemWidget extends StatelessWidget {
                 Row(
                   children: [
                     InkWell(
-                      onTap: () {
-                        // Toggle like comment
-                      },
+                      onTap: onLike,
                       borderRadius: BorderRadius.circular(4),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -82,14 +87,19 @@ class CommentItemWidget extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              comment.isLiked
+                              comment
+                                      .isLikedByCurrentUser // CAMBIADO
                                   ? LucideIcons.heart
                                   : LucideIcons.heart,
-                              color: comment.isLiked
+                              color:
+                                  comment
+                                      .isLikedByCurrentUser // CAMBIADO
                                   ? AppColors.error
                                   : AppColors.textTertiary,
                               size: 16,
-                              fill: comment.isLiked ? 1.0 : 0.0,
+                              fill: comment.isLikedByCurrentUser
+                                  ? 1.0
+                                  : 0.0, // CAMBIADO
                             ),
                             if (comment.likesCount > 0) ...[
                               const SizedBox(width: 4),
@@ -110,7 +120,7 @@ class CommentItemWidget extends StatelessWidget {
 
                     InkWell(
                       onTap: () {
-                        // Reply to comment
+                        // Reply to comment - TODO: Implementar respuestas
                       },
                       borderRadius: BorderRadius.circular(4),
                       child: Padding(

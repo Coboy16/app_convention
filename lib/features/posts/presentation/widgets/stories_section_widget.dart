@@ -3,11 +3,11 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '/features/posts/presentation/screens/screens.dart';
-import '/features/posts/data/data.dart';
+import '/features/posts/domain/entities/feed_story_entity.dart'; // CAMBIADO
 import '/core/core.dart';
 
 class StoriesSectionWidget extends StatelessWidget {
-  final List<StoryModel> stories;
+  final List<FeedStoryEntity> stories; // CAMBIADO
   final VoidCallback onAddStory;
 
   const StoriesSectionWidget({
@@ -42,7 +42,7 @@ class StoriesSectionWidget extends StatelessWidget {
 
   void _openStoryViewer(
     BuildContext context,
-    List<StoryModel> stories,
+    List<FeedStoryEntity> stories, // CAMBIADO
     int initialIndex,
   ) {
     Navigator.push(
@@ -67,7 +67,7 @@ class _AddStoryButton extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(right: 12),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Importante para evitar overflow
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 64,
@@ -105,7 +105,7 @@ class _AddStoryButton extends StatelessWidget {
 }
 
 class _StoryItem extends StatelessWidget {
-  final StoryModel story;
+  final FeedStoryEntity story; // CAMBIADO
   final VoidCallback onTap;
 
   const _StoryItem({required this.story, required this.onTap});
@@ -125,7 +125,9 @@ class _StoryItem extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: story.isViewed
+                  color:
+                      story
+                          .isViewedByCurrentUser // CAMBIADO
                       ? AppColors.inputBorder
                       : AppColors.primary,
                   width: 3,
