@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "808624128150",
+    "project_id": "konecta-de502",
+    "storage_bucket": "konecta-de502.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:808624128150:android:313cdc0d248b32bac842b7",
+        "android_client_info": {
+          "package_name": "com.example.konecta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "808624128150-gh89ra1t49vi8nhviot84usepghgia07.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.konecta",
+            "certificate_hash": "f50f6b21aed3ba1324671a1863c9bcedd96f729f"
+          }
+        },
+        {
+          "client_id": "808624128150-0nd611asjal1im3mv38ojk0jt854sb5g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrrCeBtyWdysFbvD7EN6KF7j2GrZ25TyU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "808624128150-0nd611asjal1im3mv38ojk0jt854sb5g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
