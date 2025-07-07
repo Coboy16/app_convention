@@ -3,15 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '/features/posts/presentation/widgets/widgets.dart';
 import '/features/posts/presentation/bloc/blocs.dart';
-import '/features/posts/domain/entities/feed_post_entity.dart'; // CAMBIADO
-import '/features/posts/domain/entities/feed_comment_entity.dart'; // CAMBIADO
+import '/features/posts/domain/entities/feed_post_entity.dart';
+import '/features/posts/domain/entities/feed_comment_entity.dart';
 import '/core/core.dart';
 
 class PostDetailScreen extends StatefulWidget {
-  final FeedPostEntity post; // CAMBIADO
+  final FeedPostEntity post;
 
   const PostDetailScreen({super.key, required this.post});
 
@@ -22,8 +23,8 @@ class PostDetailScreen extends StatefulWidget {
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final _commentController = TextEditingController();
   final _scrollController = ScrollController();
-  List<FeedCommentEntity> _comments = []; // CAMBIADO
-  bool _isLoadingComments = false;
+  List<FeedCommentEntity> _comments = [];
+  bool _isLoadingComments = true; // CAMBIADO: true por defecto
 
   @override
   void initState() {
@@ -42,19 +43,41 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     setState(() {
       _isLoadingComments = true;
     });
-    context.read<FeedPostsBloc>().loadComments(widget.post.id); // CAMBIADO
+    context.read<FeedPostsBloc>().loadComments(widget.post.id);
   }
 
   void _addComment() {
     final content = _commentController.text.trim();
     if (content.isNotEmpty) {
-      context.read<FeedPostsBloc>().addComment(
-        widget.post.id,
-        content,
-      ); // CAMBIADO
+      context.read<FeedPostsBloc>().addComment(widget.post.id, content);
       _commentController.clear();
       FocusScope.of(context).unfocus();
     }
+  }
+
+  void _sharePost() {
+    final shareText =
+        '''
+🎉 ¡Mira este post de ${widget.post.username}!
+
+${widget.post.content}
+
+${widget.post.hashtags.isNotEmpty ? widget.post.hashtags.join(' ') : ''}
+
+📱 Compartido desde Konecta App
+''';
+
+    if (widget.post.imageUrls.isNotEmpty) {
+      // Compartir con imagen
+      Share.share(shareText, subject: 'Post de ${widget.post.username}');
+    } else {
+      // Compartir solo texto
+      Share.share(shareText);
+    }
+  }
+
+  void _likePost() {
+    context.read<FeedPostsBloc>().togglePostLike(widget.post.id);
   }
 
   @override
@@ -87,12 +110,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   Text('Post', style: AppTextStyles.h4),
                   const Spacer(),
                   IconButton(
-                    onPressed: () {
-                      ToastUtils.showInfo(
-                        context: context,
-                        message: 'Share functionality coming soon...',
-                      );
-                    },
+                    onPressed: _sharePost, // IMPLEMENTADO
                     icon: const Icon(
                       LucideIcons.share,
                       color: AppColors.textPrimary,
@@ -106,16 +124,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             // Content
             Expanded(
               child: BlocListener<FeedPostsBloc, FeedPostsState>(
-                // CAMBIADO
                 listener: (context, state) {
-                  if (state is FeedCommentsLoaded) {
-                    // CAMBIADO
+                  if (state is FeedCommentsLoaded &&
+                      state.postId == widget.post.id) {
                     setState(() {
                       _comments = state.comments;
                       _isLoadingComments = false;
                     });
                   } else if (state is FeedCommentAdded) {
-                    // CAMBIADO
                     setState(() {
                       _comments.insert(0, state.comment);
                     });
@@ -123,6 +139,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       context: context,
                       message: 'Comentario agregado',
                     );
+                  } else if (state is FeedPostsError) {
+                    setState(() {
+                      _isLoadingComments = false;
+                    });
                   }
                 },
                 child: SingleChildScrollView(
@@ -134,7 +154,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Post content
-                      _PostContent(post: widget.post),
+                      _PostContent(
+                        post: widget.post,
+                        onLike: _likePost,
+                        onShare: _sharePost,
+                      ),
 
                       const SizedBox(height: 24),
 
@@ -145,7 +169,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         onCommentLike: (commentId) {
                           context.read<FeedPostsBloc>().toggleCommentLike(
                             commentId,
-                          ); // CAMBIADO
+                          );
                         },
                       ),
                     ],
@@ -164,9 +188,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 }
 
 class _PostContent extends StatelessWidget {
-  final FeedPostEntity post; // CAMBIADO
+  final FeedPostEntity post;
+  final VoidCallback onLike;
+  final VoidCallback onShare;
 
-  const _PostContent({required this.post});
+  const _PostContent({
+    required this.post,
+    required this.onLike,
+    required this.onShare,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +213,7 @@ class _PostContent extends StatelessWidget {
           // Post Header
           Row(
             children: [
-              if (post.type == FeedPostType.admin) // CAMBIADO
+              if (post.type == FeedPostType.admin)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -231,7 +261,7 @@ class _PostContent extends StatelessWidget {
                         if (post.userRole != null) ...[
                           const SizedBox(width: 8),
                           AutoSizeText(
-                            '(${post.userRole})', // CAMBIADO
+                            '(${post.userRole})',
                             style: AppTextStyles.body2.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -284,40 +314,82 @@ class _PostContent extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Post stats
+          // Post actions
           Row(
             children: [
-              Icon(
-                post.isLikedByCurrentUser
-                    ? LucideIcons.heart
-                    : LucideIcons.heart, // CAMBIADO
-                color: post.isLikedByCurrentUser
-                    ? AppColors.error
-                    : AppColors.textTertiary, // CAMBIADO
-                size: 20,
-                fill: post.isLikedByCurrentUser ? 1.0 : 0.0, // CAMBIADO
-              ),
-              const SizedBox(width: 4),
-              AutoSizeText(
-                '${post.likesCount} likes',
-                style: AppTextStyles.body2.copyWith(
-                  color: AppColors.textSecondary,
+              // Like button
+              InkWell(
+                onTap: onLike,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        post.isLikedByCurrentUser
+                            ? LucideIcons.heart
+                            : LucideIcons.heart,
+                        color: post.isLikedByCurrentUser
+                            ? AppColors.error
+                            : AppColors.textTertiary,
+                        size: 20,
+                        fill: post.isLikedByCurrentUser ? 1.0 : 0.0,
+                      ),
+                      const SizedBox(width: 4),
+                      AutoSizeText(
+                        '${post.likesCount} likes',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
                 ),
-                maxLines: 1,
               ),
+
               const SizedBox(width: 16),
-              Icon(
-                LucideIcons.messageCircle,
-                color: AppColors.textTertiary,
-                size: 20,
+
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.messageCircle,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  AutoSizeText(
+                    '${post.commentsCount} comments',
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                  ),
+                ],
               ),
-              const SizedBox(width: 4),
-              AutoSizeText(
-                '${post.commentsCount} comments',
-                style: AppTextStyles.body2.copyWith(
-                  color: AppColors.textSecondary,
+
+              const Spacer(),
+
+              // Share button
+              InkWell(
+                onTap: onShare,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Icon(
+                    LucideIcons.share,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
                 ),
-                maxLines: 1,
               ),
             ],
           ),
@@ -451,7 +523,7 @@ class _PostContent extends StatelessWidget {
 }
 
 class _CommentsSection extends StatelessWidget {
-  final List<FeedCommentEntity> comments; // CAMBIADO
+  final List<FeedCommentEntity> comments;
   final bool isLoading;
   final Function(String) onCommentLike;
 
@@ -470,10 +542,21 @@ class _CommentsSection extends StatelessWidget {
         const SizedBox(height: 16),
 
         if (isLoading)
-          const Center(child: CircularProgressIndicator())
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          )
         else if (comments.isEmpty)
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.inputBorder, width: 1),
+            ),
             child: Column(
               children: [
                 Icon(
@@ -484,12 +567,18 @@ class _CommentsSection extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'No hay comentarios aún',
-                  style: AppTextStyles.body2.copyWith(
+                  style: AppTextStyles.body1.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('Sé el primero en comentar', style: AppTextStyles.caption),
+                Text(
+                  'Sé el primero en comentar este post',
+                  style: AppTextStyles.body2.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           )
