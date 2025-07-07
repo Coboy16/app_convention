@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '/core/errors/exceptions.dart';
 import '../models/dashboard_model.dart';
+import 'mock_dashboard_datasource.dart'; // IMPORTAR MOCK
 
 abstract class DashboardRemoteDataSource {
   Future<DashboardModel> getDashboard(String eventId);
@@ -17,11 +18,21 @@ abstract class DashboardRemoteDataSource {
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   final FirebaseFirestore firestore;
+  final bool useMockData; // AGREGAR FLAG PARA DEMO
 
-  DashboardRemoteDataSourceImpl({required this.firestore});
+  DashboardRemoteDataSourceImpl({
+    required this.firestore,
+    this.useMockData = true, // ✅ TRUE para presentación, FALSE para producción
+  });
 
   @override
   Future<DashboardModel> getDashboard(String eventId) async {
+    // ✅ USAR MOCK PARA PRESENTACIÓN
+    if (useMockData) {
+      return await MockDashboardDataSource.getDashboard(eventId);
+    }
+
+    // Código Firebase original...
     try {
       debugPrint('🔍 Obteniendo dashboard para eventId: $eventId');
 
@@ -42,16 +53,21 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   @override
   Future<List<TodayHighlightModel>> getTodayHighlights(String eventId) async {
+    // ✅ USAR MOCK PARA PRESENTACIÓN
+    if (useMockData) {
+      return await MockDashboardDataSource.getTodayHighlights(eventId);
+    }
+
+    // Código Firebase original...
     try {
       debugPrint('🔍 Obteniendo highlights para eventId: $eventId');
 
-      // ✅ SIMPLIFIED: Query simple sin filtros complejos
       final querySnapshot = await firestore
           .collection('events')
           .doc(eventId)
           .collection('highlights')
           .where('isActive', isEqualTo: true)
-          .get(); // Remover orderBy para evitar índices complejos
+          .get();
 
       debugPrint('📊 Highlights encontrados: ${querySnapshot.docs.length}');
 
@@ -59,29 +75,31 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           .map((doc) => TodayHighlightModel.fromFirestore(doc))
           .toList();
 
-      // Ordenar en memoria por startTime si existe
       highlights.sort((a, b) => a.startTime.compareTo(b.startTime));
-
       return highlights;
     } catch (e) {
       debugPrint('❌ Error al obtener highlights: ${e.toString()}');
-      // ✅ NO lanzar excepción, retornar lista vacía
       return [];
     }
   }
 
   @override
   Future<List<RecentUpdateModel>> getRecentUpdates(String eventId) async {
+    // ✅ USAR MOCK PARA PRESENTACIÓN
+    if (useMockData) {
+      return await MockDashboardDataSource.getRecentUpdates(eventId);
+    }
+
+    // Código Firebase original...
     try {
       debugPrint('🔍 Obteniendo updates para eventId: $eventId');
 
-      // ✅ SIMPLIFIED: Query simple
       final querySnapshot = await firestore
           .collection('events')
           .doc(eventId)
           .collection('updates')
           .limit(10)
-          .get(); // Remover orderBy para evitar índices
+          .get();
 
       debugPrint('📊 Updates encontrados: ${querySnapshot.docs.length}');
 
@@ -89,23 +107,25 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           .map((doc) => RecentUpdateModel.fromFirestore(doc))
           .toList();
 
-      // Ordenar en memoria por timestamp
       updates.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
       return updates;
     } catch (e) {
       debugPrint('❌ Error al obtener updates: ${e.toString()}');
-      // ✅ NO lanzar excepción, retornar lista vacía
       return [];
     }
   }
 
   @override
   Future<List<SurveyModel>> getAvailableSurveys(String eventId) async {
+    // ✅ USAR MOCK PARA PRESENTACIÓN
+    if (useMockData) {
+      return await MockDashboardDataSource.getAvailableSurveys(eventId);
+    }
+
+    // Código Firebase original...
     try {
       debugPrint('🔍 Obteniendo surveys para eventId: $eventId');
 
-      // ✅ SIMPLIFIED: Query simple sin filtros de fecha
       final querySnapshot = await firestore
           .collection('events')
           .doc(eventId)
@@ -118,7 +138,6 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           .map((doc) => SurveyModel.fromFirestore(doc))
           .toList();
 
-      // Filtrar en memoria los surveys que no han expirado
       final now = DateTime.now();
       final activeSurveys = surveys
           .where((survey) => survey.expiresAt.isAfter(now))
@@ -127,7 +146,6 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       return activeSurveys;
     } catch (e) {
       debugPrint('❌ Error al obtener surveys: ${e.toString()}');
-      // ✅ NO lanzar excepción, retornar lista vacía
       return [];
     }
   }
@@ -138,6 +156,16 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     required String userId,
     required Map<String, dynamic> responses,
   }) async {
+    // ✅ USAR MOCK PARA PRESENTACIÓN
+    if (useMockData) {
+      return await MockDashboardDataSource.submitSurveyResponse(
+        surveyId: surveyId,
+        userId: userId,
+        responses: responses,
+      );
+    }
+
+    // Código Firebase original...
     try {
       debugPrint(
         '📤 Enviando respuesta de survey: $surveyId para user: $userId',
