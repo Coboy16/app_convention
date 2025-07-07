@@ -6,7 +6,7 @@ class UserEntity extends Equatable {
   final String name;
   final String role; // 'participant' | 'organizer'
   final String bio;
-  final String allergies;
+  final List<String> allergies; // ✅ Cambiado de String a List<String>
   final String? photoUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -17,7 +17,7 @@ class UserEntity extends Equatable {
     required this.name,
     required this.role,
     this.bio = '',
-    this.allergies = '',
+    this.allergies = const [], // ✅ Valor por defecto es lista vacía
     this.photoUrl,
     required this.createdAt,
     required this.updatedAt,
@@ -32,7 +32,7 @@ class UserEntity extends Equatable {
     String? name,
     String? role,
     String? bio,
-    String? allergies,
+    List<String>? allergies, // ✅ Cambiado el tipo
     String? photoUrl,
     DateTime? createdAt,
     DateTime? updatedAt,

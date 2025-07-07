@@ -127,7 +127,9 @@ class AuthRepositoryImpl implements AuthRepository {
         final updatedUser = currentUser.copyWith(
           name: name,
           bio: bio,
-          allergies: allergies,
+          allergies: allergies != null && allergies.isNotEmpty
+              ? allergies.split(',').map((e) => e.trim()).toList()
+              : null,
           photoUrl: photoUrl,
           updatedAt: DateTime.now(),
         );

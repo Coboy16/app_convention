@@ -24,11 +24,27 @@ class UserModel extends UserEntity {
       name: data['name'] ?? '',
       role: data['role'] ?? 'participant',
       bio: data['bio'] ?? '',
-      allergies: data['allergies'] ?? '',
+      allergies: _parseAllergies(data['allergies']), // ✅ Usar helper method
       photoUrl: data['photoUrl'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
     );
+  }
+
+  // ✅ Método helper para manejar la conversión de alergias
+  static List<String> _parseAllergies(dynamic allergiesData) {
+    if (allergiesData == null) return [];
+
+    if (allergiesData is List) {
+      return allergiesData.map((item) => item.toString()).toList();
+    }
+
+    if (allergiesData is String) {
+      // Si es un string, intentar dividirlo o retornarlo como lista
+      return [allergiesData];
+    }
+
+    return [];
   }
 
   // Factory constructor para crear desde Map
@@ -39,7 +55,7 @@ class UserModel extends UserEntity {
       name: map['name'] ?? '',
       role: map['role'] ?? 'participant',
       bio: map['bio'] ?? '',
-      allergies: map['allergies'] ?? '',
+      allergies: _parseAllergies(map['allergies']), // ✅ Usar helper method
       photoUrl: map['photoUrl'],
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
@@ -57,7 +73,7 @@ class UserModel extends UserEntity {
       'name': name,
       'role': role,
       'bio': bio,
-      'allergies': allergies,
+      'allergies': allergies, // ✅ Ya es List<String>, no necesita conversión
       'photoUrl': photoUrl,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
@@ -93,7 +109,7 @@ class UserModel extends UserEntity {
       name: name,
       role: role,
       bio: '',
-      allergies: '',
+      allergies: const [], // ✅ Lista vacía por defecto
       photoUrl: null,
       createdAt: now,
       updatedAt: now,
@@ -106,7 +122,7 @@ class UserModel extends UserEntity {
     String? name,
     String? role,
     String? bio,
-    String? allergies,
+    List<String>? allergies, // ✅ Cambiar tipo
     String? photoUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
