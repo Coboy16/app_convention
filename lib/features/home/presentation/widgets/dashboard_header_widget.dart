@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '/features/home/data/data.dart';
+import '../../domain/entities/dashboard_entity.dart';
 import '/core/core.dart';
-import 'profile_menu_widget.dart'; // <-- IMPORTA EL NUEVO WIDGET
+import 'profile_menu_widget.dart';
 
 // Convertido a StatefulWidget para manejar el GlobalKey
 class DashboardHeaderWidget extends StatefulWidget {
-  final DashboardModel dashboard;
+  final DashboardEntity dashboard;
 
   const DashboardHeaderWidget({super.key, required this.dashboard});
 
@@ -85,16 +85,14 @@ class _DashboardHeaderWidgetState extends State<DashboardHeaderWidget> {
                   Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppColors.error,
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(widget.dashboard.eventStatus),
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    widget.dashboard.eventStatus == EventStatus.live
-                        ? 'Live'
-                        : 'Inactive',
+                    _getStatusText(widget.dashboard.eventStatus),
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -106,15 +104,11 @@ class _DashboardHeaderWidgetState extends State<DashboardHeaderWidget> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: widget.dashboard.role == UserRole.organizer
-                          ? AppColors.warning
-                          : AppColors.primary,
+                      color: AppColors.primary, // Simplificado: solo un color
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      widget.dashboard.role == UserRole.organizer
-                          ? 'ORGANIZER'
-                          : 'ATTENDEE',
+                      'ATTENDEE', // Simplificado: solo attendee por ahora
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.surface,
                         fontWeight: FontWeight.w600,
@@ -142,18 +136,11 @@ class _DashboardHeaderWidgetState extends State<DashboardHeaderWidget> {
               right: 12,
               top: 12,
               child: Container(
-                padding: const EdgeInsets.all(4),
+                width: 8,
+                height: 8,
                 decoration: const BoxDecoration(
                   color: AppColors.error,
                   shape: BoxShape.circle,
-                ),
-                child: const Text(
-                  '3',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ),
@@ -168,18 +155,41 @@ class _DashboardHeaderWidgetState extends State<DashboardHeaderWidget> {
           },
           child: Container(
             padding: const EdgeInsets.all(2),
-            decoration: const BoxDecoration(
-              color: Color(0xFF8A2BE2),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
             ),
             child: CircleAvatar(
               radius: 20,
               backgroundColor: AppColors.surfaceVariant,
-              child: Text('JD', style: AppTextStyles.caption),
+              child: Text('U', style: AppTextStyles.caption),
             ),
           ),
         ),
       ],
     );
+  }
+
+  Color _getStatusColor(EventStatus status) {
+    switch (status) {
+      case EventStatus.live:
+        return AppColors.success;
+      case EventStatus.upcoming:
+        return AppColors.warning;
+      case EventStatus.ended:
+        return AppColors.error;
+    }
+  }
+
+  String _getStatusText(EventStatus status) {
+    switch (status) {
+      case EventStatus.live:
+        return 'En Vivo';
+      case EventStatus.upcoming:
+        return 'Próximo';
+      case EventStatus.ended:
+        return 'Finalizado';
+    }
   }
 }

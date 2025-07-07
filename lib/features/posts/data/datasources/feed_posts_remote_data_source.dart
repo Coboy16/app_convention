@@ -403,7 +403,7 @@ class FeedPostsRemoteDataSourceImpl implements FeedPostsRemoteDataSource {
       debugPrint('🔍 Obteniendo todas las historias');
 
       // Filtrar historias no expiradas (últimas 24 horas)
-      final dayAgo = DateTime.now().subtract(const Duration(hours: 24));
+      DateTime.now().subtract(const Duration(hours: 24));
 
       final querySnapshot = await firestore
           .collection('feed_stories')

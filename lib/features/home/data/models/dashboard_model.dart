@@ -1,281 +1,284 @@
-import 'package:equatable/equatable.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../domain/entities/dashboard_entity.dart';
 
-class DashboardModel extends Equatable {
-  final String userId;
-  final UserRole role;
-  final String eventName;
-  final String location;
-  final EventStatus eventStatus;
-  final DashboardStats stats;
-  final List<ActionItem> actionItems;
-  final List<RecentActivity> recentActivities;
-  final List<EventOperation> eventOperations;
-  final List<TodayHighlight> todayHighlights;
-
+class DashboardModel extends DashboardEntity {
   const DashboardModel({
-    required this.userId,
-    required this.role,
-    required this.eventName,
-    required this.location,
-    required this.eventStatus,
-    required this.stats,
-    required this.actionItems,
-    required this.recentActivities,
-    required this.eventOperations,
-    required this.todayHighlights,
+    required super.id,
+    required super.eventName,
+    required super.location,
+    required super.eventStatus,
+    required super.stats,
+    required super.todayHighlights,
+    required super.recentUpdates,
+    required super.availableSurveys,
+    required super.lastUpdated,
   });
 
-  @override
-  List<Object> get props => [
-    userId,
-    role,
-    eventName,
-    location,
-    eventStatus,
-    stats,
-    actionItems,
-    recentActivities,
-    eventOperations,
-    todayHighlights,
-  ];
+  factory DashboardModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
 
-  // Mock data para organizador
-  static DashboardModel get mockOrganizerDashboard => DashboardModel(
-    userId: 'org1',
-    role: UserRole.organizer,
-    eventName: 'Convention 2024',
-    location: 'Lima, Perú',
-    eventStatus: EventStatus.live,
-    stats: const DashboardStats(
-      posts: 156,
-      people: 89,
-      engagement: 95,
-      hours: null,
-    ),
-    actionItems: [
-      const ActionItem(
-        id: '1',
-        title: 'Enviar notificación de cambio de lugar de almuerzo',
-        type: ActionType.notification,
-      ),
-      const ActionItem(
-        id: '2',
-        title: 'Aprobar 2 nuevas publicaciones de asistentes',
-        type: ActionType.approval,
-      ),
-      const ActionItem(
-        id: '3',
-        title: 'Actualizar horario del taller de la tarde',
-        type: ActionType.update,
-      ),
-    ],
-    recentActivities: [
-      RecentActivity(
-        id: '1',
-        description: '📝 María publicó nuevo contenido',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
-        type: ActivityType.post,
-      ),
-      RecentActivity(
-        id: '2',
-        description: '👍 15 nuevos likes en tu publicación',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-        type: ActivityType.like,
-      ),
-    ],
-    eventOperations: [
-      const EventOperation(
-        title: 'Todos los Servicios Funcionando Sin Problemas',
-        details: [
-          OperationDetail(
-            icon: 'app',
-            title: 'App',
-            value: '156 usuarios activos',
-            status: OperationStatus.good,
-          ),
-          OperationDetail(
-            icon: 'venue',
-            title: 'Lugar',
-            value: 'Convention Center conectado',
-            status: OperationStatus.good,
-          ),
-          OperationDetail(
-            icon: 'engagement',
-            title: 'Participación',
-            value: '95% participación',
-            status: OperationStatus.excellent,
-          ),
-        ],
-        lastUpdate: 'Actualizado hace 30 segundos',
-      ),
-    ],
-    todayHighlights: [],
-  );
+    return DashboardModel(
+      id: doc.id,
+      eventName: data['eventName'] ?? '',
+      location: data['location'] ?? '',
+      eventStatus: _parseEventStatus(data['eventStatus']),
+      stats: DashboardStatsModel.fromMap(data['stats'] ?? {}),
+      todayHighlights: [],
+      recentUpdates: [],
+      availableSurveys: [],
+      lastUpdated: (data['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
 
-  // Mock data para participante
-  static DashboardModel get mockParticipantDashboard => DashboardModel(
-    userId: 'part1',
-    role: UserRole.participant,
-    eventName: 'Convención 2024',
-    location: 'Lima, Perú',
-    eventStatus: EventStatus.live,
-    stats: const DashboardStats(
-      posts: 156,
-      people: 89,
-      engagement: null,
-      hours: 12,
-    ),
-    actionItems: [],
-    recentActivities: [
-      RecentActivity(
-        id: '1',
-        description: 'El lugar del almuerzo se cambió al Salón Principal',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-        type: ActivityType.update,
-      ),
-      RecentActivity(
-        id: '2',
-        description: 'Nuevo taller añadido: IA en los negocios',
-        timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-        type: ActivityType.new_event,
-      ),
-      RecentActivity(
-        id: '3',
-        description: 'Se anuncian los ganadores del concurso de fotografía',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        type: ActivityType.announcement,
-      ),
-    ],
-    eventOperations: [],
-    todayHighlights: [
-      TodayHighlight(
-        id: '1',
-        title: 'Charla de apertura',
-        time: '9 a. m.',
-        icon: 'microphone',
-        color: '#6366F1',
-      ),
-      TodayHighlight(
-        id: '2',
-        title: 'Pausa para el almuerzo',
-        time: '12 p. m.',
-        icon: 'utensils',
-        color: '#10B981',
-      ),
-      TodayHighlight(
-        id: '3',
-        title: 'Redes',
-        time: '6 p. m.',
-        icon: 'users',
-        color: '#8B5CF6',
-      ),
-    ],
-  );
+  static EventStatus _parseEventStatus(String? status) {
+    switch (status) {
+      case 'upcoming':
+        return EventStatus.upcoming;
+      case 'live':
+        return EventStatus.live;
+      case 'ended':
+        return EventStatus.ended;
+      default:
+        return EventStatus.upcoming;
+    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'eventName': eventName,
+      'location': location,
+      'eventStatus': eventStatus.name,
+      'stats': (stats as DashboardStatsModel).toMap(),
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
+    };
+  }
 }
 
-class DashboardStats extends Equatable {
-  final int posts;
-  final int people;
-  final int? engagement;
-  final int? hours;
-
-  const DashboardStats({
-    required this.posts,
-    required this.people,
-    this.engagement,
-    this.hours,
+class DashboardStatsModel extends DashboardStatsEntity {
+  const DashboardStatsModel({
+    required super.posts,
+    required super.people,
+    super.engagement,
+    super.hours,
   });
 
-  @override
-  List<Object?> get props => [posts, people, engagement, hours];
+  factory DashboardStatsModel.fromMap(Map<String, dynamic> map) {
+    return DashboardStatsModel(
+      posts: map['posts'] ?? 0,
+      people: map['people'] ?? 0,
+      engagement: map['engagement'],
+      hours: map['hours'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'posts': posts,
+      'people': people,
+      'engagement': engagement,
+      'hours': hours,
+    };
+  }
 }
 
-class ActionItem extends Equatable {
-  final String id;
-  final String title;
-  final ActionType type;
-
-  const ActionItem({required this.id, required this.title, required this.type});
-
-  @override
-  List<Object> get props => [id, title, type];
-}
-
-class RecentActivity extends Equatable {
-  final String id;
-  final String description;
-  final DateTime timestamp;
-  final ActivityType type;
-
-  const RecentActivity({
-    required this.id,
-    required this.description,
-    required this.timestamp,
-    required this.type,
+class TodayHighlightModel extends TodayHighlightEntity {
+  const TodayHighlightModel({
+    required super.id,
+    required super.title,
+    required super.time,
+    required super.description,
+    required super.location,
+    required super.type,
+    required super.startTime,
+    required super.endTime,
+    super.imageUrl,
+    required super.isActive,
   });
 
-  @override
-  List<Object> get props => [id, description, timestamp, type];
+  factory TodayHighlightModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
+    return TodayHighlightModel(
+      id: doc.id,
+      title: data['title'] ?? '',
+      time: data['time'] ?? '',
+      description: data['description'] ?? '',
+      location: data['location'] ?? '',
+      type: _parseHighlightType(data['type']),
+      startTime: (data['startTime'] as Timestamp).toDate(),
+      endTime: (data['endTime'] as Timestamp).toDate(),
+      imageUrl: data['imageUrl'],
+      isActive: data['isActive'] ?? true,
+    );
+  }
+
+  static HighlightType _parseHighlightType(String? type) {
+    switch (type) {
+      case 'session':
+        return HighlightType.session;
+      case 'break':
+        return HighlightType.breaki;
+      case 'networking':
+        return HighlightType.networking;
+      case 'workshop':
+        return HighlightType.workshop;
+      case 'keynote':
+        return HighlightType.keynote;
+      default:
+        return HighlightType.session;
+    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'time': time,
+      'description': description,
+      'location': location,
+      'type': type.name,
+      'startTime': Timestamp.fromDate(startTime),
+      'endTime': Timestamp.fromDate(endTime),
+      'imageUrl': imageUrl,
+      'isActive': isActive,
+    };
+  }
 }
 
-class EventOperation extends Equatable {
-  final String title;
-  final List<OperationDetail> details;
-  final String lastUpdate;
-
-  const EventOperation({
-    required this.title,
-    required this.details,
-    required this.lastUpdate,
+class RecentUpdateModel extends RecentUpdateEntity {
+  const RecentUpdateModel({
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.type,
+    required super.timestamp,
+    super.imageUrl,
+    required super.isImportant,
   });
 
-  @override
-  List<Object> get props => [title, details, lastUpdate];
+  factory RecentUpdateModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
+    return RecentUpdateModel(
+      id: doc.id,
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      type: _parseUpdateType(data['type']),
+      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      imageUrl: data['imageUrl'],
+      isImportant: data['isImportant'] ?? false,
+    );
+  }
+
+  static UpdateType _parseUpdateType(String? type) {
+    switch (type) {
+      case 'general':
+        return UpdateType.general;
+      case 'important':
+        return UpdateType.important;
+      case 'schedule':
+        return UpdateType.schedule;
+      case 'venue':
+        return UpdateType.venue;
+      case 'catering':
+        return UpdateType.catering;
+      default:
+        return UpdateType.general;
+    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'description': description,
+      'type': type.name,
+      'timestamp': Timestamp.fromDate(timestamp),
+      'imageUrl': imageUrl,
+      'isImportant': isImportant,
+    };
+  }
 }
 
-class OperationDetail extends Equatable {
-  final String icon;
-  final String title;
-  final String value;
-  final OperationStatus status;
-
-  const OperationDetail({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.status,
+class SurveyModel extends SurveyEntity {
+  const SurveyModel({
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.questions,
+    required super.expiresAt,
+    required super.isCompleted,
+    required super.responseCount,
   });
 
-  @override
-  List<Object> get props => [icon, title, value, status];
+  factory SurveyModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
+    return SurveyModel(
+      id: doc.id,
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      questions: (data['questions'] as List<dynamic>?)
+              ?.map((q) => SurveyQuestionModel.fromMap(q))
+              .toList() ??
+          [],
+      expiresAt: (data['expiresAt'] as Timestamp).toDate(),
+      isCompleted: data['isCompleted'] ?? false,
+      responseCount: data['responseCount'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'description': description,
+      'questions': questions.map((q) => (q as SurveyQuestionModel).toMap()).toList(),
+      'expiresAt': Timestamp.fromDate(expiresAt),
+      'isCompleted': isCompleted,
+      'responseCount': responseCount,
+    };
+  }
 }
 
-class TodayHighlight extends Equatable {
-  final String id;
-  final String title;
-  final String time;
-  final String icon;
-  final String color;
-
-  const TodayHighlight({
-    required this.id,
-    required this.title,
-    required this.time,
-    required this.icon,
-    required this.color,
+class SurveyQuestionModel extends SurveyQuestionEntity {
+  const SurveyQuestionModel({
+    required super.id,
+    required super.question,
+    required super.type,
+    required super.options,
+    required super.isRequired,
   });
 
-  @override
-  List<Object> get props => [id, title, time, icon, color];
+  factory SurveyQuestionModel.fromMap(Map<String, dynamic> map) {
+    return SurveyQuestionModel(
+      id: map['id'] ?? '',
+      question: map['question'] ?? '',
+      type: _parseQuestionType(map['type']),
+      options: List<String>.from(map['options'] ?? []),
+      isRequired: map['isRequired'] ?? false,
+    );
+  }
+
+  static QuestionType _parseQuestionType(String? type) {
+    switch (type) {
+      case 'multipleChoice':
+        return QuestionType.multipleChoice;
+      case 'singleChoice':
+        return QuestionType.singleChoice;
+      case 'text':
+        return QuestionType.text;
+      case 'rating':
+        return QuestionType.rating;
+      default:
+        return QuestionType.singleChoice;
+    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'question': question,
+      'type': type.name,
+      'options': options,
+      'isRequired': isRequired,
+    };
+  }
 }
-
-enum UserRole { organizer, participant }
-
-enum EventStatus { upcoming, live, ended }
-
-enum ActionType { notification, approval, update }
-
-// ignore: constant_identifier_names
-enum ActivityType { post, like, update, new_event, announcement }
-
-enum OperationStatus { good, excellent, warning, error }
