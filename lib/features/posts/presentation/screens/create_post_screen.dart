@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:dotted_border/dotted_border.dart';
 

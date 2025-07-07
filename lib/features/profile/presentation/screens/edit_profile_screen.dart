@@ -158,73 +158,78 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.all(
-                    AppResponsive.horizontalPadding(context),
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 24),
+                child: Container(
+                  color: Colors.white,
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(
+                      AppResponsive.horizontalPadding(context),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 24),
 
-                        // Avatar Section
-                        ProfileAvatarWidget(
-                          avatarUrl: widget.profile.photoUrl,
-                          name: widget.profile.name,
-                          size: 80,
-                          isEditable: true,
-                          onEditPressed: () {
-                            _showChangePhotoModal();
-                          },
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Form Fields
-                        EditProfileFormWidget(
-                          nameController: _nameController,
-                          emailController: TextEditingController(
-                            text: widget.profile.email,
+                          // Avatar Section
+                          ProfileAvatarWidget(
+                            avatarUrl: widget.profile.photoUrl,
+                            name: widget.profile.name,
+                            size: 80,
+                            isEditable: true,
+                            onEditPressed: () {
+                              _showChangePhotoModal();
+                            },
                           ),
-                          bioController: _bioController,
-                          selectedAllergies: _selectedAllergies,
-                          onAllergiesChanged: (allergies) {
-                            setState(() {
-                              _selectedAllergies = allergies;
-                              _hasChanges = true;
-                            });
-                            debugPrint('🔄 Alergias actualizadas: $allergies');
-                          },
-                          userRole: widget.profile.role,
-                          userId: widget.profile.id,
-                          tempPostImages: _tempPostImages,
-                          onAddTempImage: (imagePath) {
-                            setState(() {
-                              _tempPostImages.add(imagePath);
-                              _hasChanges = true;
-                            });
-                            debugPrint(
-                              '📸 Imagen temporal agregada: $imagePath',
-                            );
-                            debugPrint(
-                              '📸 Total imágenes temporales: ${_tempPostImages.length}',
-                            );
-                          },
-                          onRemoveTempImage: (index) {
-                            setState(() {
-                              _tempPostImages.removeAt(index);
-                              _hasChanges = true;
-                            });
-                            debugPrint(
-                              '🗑️ Imagen temporal removida en índice: $index',
-                            );
-                            debugPrint(
-                              '📸 Total imágenes temporales: ${_tempPostImages.length}',
-                            );
-                          },
-                        ),
-                      ],
+
+                          const SizedBox(height: 32),
+
+                          // Form Fields
+                          EditProfileFormWidget(
+                            nameController: _nameController,
+                            emailController: TextEditingController(
+                              text: widget.profile.email,
+                            ),
+                            bioController: _bioController,
+                            selectedAllergies: _selectedAllergies,
+                            onAllergiesChanged: (allergies) {
+                              setState(() {
+                                _selectedAllergies = allergies;
+                                _hasChanges = true;
+                              });
+                              debugPrint(
+                                '🔄 Alergias actualizadas: $allergies',
+                              );
+                            },
+                            userRole: widget.profile.role,
+                            userId: widget.profile.id,
+                            tempPostImages: _tempPostImages,
+                            onAddTempImage: (imagePath) {
+                              setState(() {
+                                _tempPostImages.add(imagePath);
+                                _hasChanges = true;
+                              });
+                              debugPrint(
+                                '📸 Imagen temporal agregada: $imagePath',
+                              );
+                              debugPrint(
+                                '📸 Total imágenes temporales: ${_tempPostImages.length}',
+                              );
+                            },
+                            onRemoveTempImage: (index) {
+                              setState(() {
+                                _tempPostImages.removeAt(index);
+                                _hasChanges = true;
+                              });
+                              debugPrint(
+                                '🗑️ Imagen temporal removida en índice: $index',
+                              );
+                              debugPrint(
+                                '📸 Total imágenes temporales: ${_tempPostImages.length}',
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

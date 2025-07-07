@@ -105,4 +105,6 @@ void _initAuth() {
       deletePostUseCase: sl(),
     ),
   );
+  // Agregar lo de post
+  //---
 }

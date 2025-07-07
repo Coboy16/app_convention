@@ -80,124 +80,162 @@ class _EditProfileFormWidgetState extends State<EditProfileFormWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Basic Information Section
-        _SectionHeader(
-          icon: LucideIcons.pencilLine,
-          title: 'Información Básica',
+        Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5),
+          child: Container(
+            padding: const EdgeInsets.only(left: 15, right: 15, top: 15),
+
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                _SectionHeader(
+                  icon: LucideIcons.pencilLine,
+                  title: 'Información Básica',
+                ),
+                const SizedBox(height: 16),
+
+                // Name Field
+                CustomTextField(
+                  label: 'Nombre',
+                  hintText: 'Ingresa tu nombre completo',
+                  controller: widget.nameController,
+                  isRequired: true,
+                  validator: FormValidators.validateName,
+                  prefixIcon: const Icon(
+                    LucideIcons.user,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Email Field (read-only)
+                CustomTextField(
+                  label: 'Email (solo lectura)',
+                  hintText: 'Dirección de correo',
+                  controller: widget.emailController,
+                  enabled: false,
+                  prefixIcon: Icon(
+                    LucideIcons.mail,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Role Field (read-only)
+                CustomTextField(
+                  label: 'Rol (solo lectura)',
+                  hintText: 'Tu rol en la aplicación',
+                  controller: TextEditingController(
+                    text: widget.userRole == 'organizer'
+                        ? 'Organizador'
+                        : 'Participante',
+                  ),
+                  enabled: false,
+                  prefixIcon: Icon(
+                    widget.userRole == 'organizer'
+                        ? LucideIcons.crown
+                        : LucideIcons.user,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+              ],
+            ),
+          ),
         ),
+        const SizedBox(height: 20),
 
-        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5),
+          child: Container(
+            padding: const EdgeInsets.only(left: 15, right: 15, top: 15),
 
-        // Name Field
-        CustomTextField(
-          label: 'Nombre',
-          hintText: 'Ingresa tu nombre completo',
-          controller: widget.nameController,
-          isRequired: true,
-          validator: FormValidators.validateName,
-          prefixIcon: const Icon(
-            LucideIcons.user,
-            color: AppColors.textTertiary,
-            size: 20,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // About You Section
+                _SectionHeader(
+                  icon: LucideIcons.messageSquare,
+                  title: 'Acerca de Ti',
+                ),
+
+                const SizedBox(height: 16),
+
+                // Bio Field
+                _BioTextField(controller: widget.bioController),
+
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
-        // Email Field (read-only)
-        CustomTextField(
-          label: 'Email (solo lectura)',
-          hintText: 'Dirección de correo',
-          controller: widget.emailController,
-          enabled: false,
-          prefixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                LucideIcons.mail,
-                color: AppColors.textTertiary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
+        Padding(
+          padding: const EdgeInsets.only(left: 5, right: 5),
+          child: Container(
+            padding: const EdgeInsets.only(left: 15, right: 15, top: 15),
+
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                child: const Icon(
-                  LucideIcons.lock,
-                  color: AppColors.warning,
-                  size: 12,
+              ],
+            ),
+            child: Column(
+              children: [
+                // Allergies Section
+                _SectionHeader(
+                  icon: LucideIcons.triangleAlert,
+                  title: 'Alergias',
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 16),
+                // Allergies Selection
+                _AllergiesSelection(
+                  availableAllergies: _availableAllergies,
+                  selectedAllergies: widget.selectedAllergies,
+                  onChanged: widget.onAllergiesChanged,
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
 
-        const SizedBox(height: 16),
-
-        // Role Field (read-only)
-        CustomTextField(
-          label: 'Rol (solo lectura)',
-          hintText: 'Tu rol en la aplicación',
-          controller: TextEditingController(
-            text: widget.userRole == 'organizer'
-                ? 'Organizador'
-                : 'Participante',
-          ),
-          enabled: false,
-          prefixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.userRole == 'organizer'
-                    ? LucideIcons.crown
-                    : LucideIcons.user,
-                color: AppColors.textTertiary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.info.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Icon(
-                  LucideIcons.info,
-                  color: AppColors.info,
-                  size: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 32),
-
-        // About You Section
-        _SectionHeader(icon: LucideIcons.messageSquare, title: 'Acerca de Ti'),
-
-        const SizedBox(height: 16),
-
-        // Bio Field
-        _BioTextField(controller: widget.bioController),
-
-        const SizedBox(height: 32),
-
-        // Allergies Section
-        _SectionHeader(icon: LucideIcons.triangleAlert, title: 'Alergias'),
-
-        const SizedBox(height: 16),
-
-        // Allergies Selection
-        _AllergiesSelection(
-          availableAllergies: _availableAllergies,
-          selectedAllergies: widget.selectedAllergies,
-          onChanged: widget.onAllergiesChanged,
-        ),
-
-        const SizedBox(height: 32),
+        const SizedBox(height: 20),
 
         // Your Posts Section
         _SectionHeader(icon: LucideIcons.camera, title: 'Tus Posts'),
@@ -240,11 +278,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
-        Icon(icon, color: AppColors.primary, size: 20),
-        const SizedBox(width: 8),
-        AutoSizeText(title, style: AppTextStyles.h4, maxLines: 1),
-      ],
+      children: [AutoSizeText(title, style: AppTextStyles.h4, maxLines: 1)],
     );
   }
 }
@@ -362,14 +396,16 @@ class _AllergiesSelection extends StatelessWidget {
                 }
                 onChanged(updatedAllergies);
               },
-              selectedColor: AppColors.error.withOpacity(0.2),
-              checkmarkColor: AppColors.error,
+              selectedColor: AppColors.primaryDark.withOpacity(0.2),
+              checkmarkColor: AppColors.primaryDark,
               labelStyle: TextStyle(
-                color: isSelected ? AppColors.error : AppColors.textPrimary,
+                color: isSelected
+                    ? Colors.grey.shade700
+                    : AppColors.textPrimary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
               side: BorderSide(
-                color: isSelected ? AppColors.error : AppColors.inputBorder,
+                color: isSelected ? AppColors.primary : AppColors.inputBorder,
                 width: 1,
               ),
             );
@@ -381,22 +417,26 @@ class _AllergiesSelection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.primaryDark.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColors.error.withOpacity(0.3),
+                color: AppColors.primary.withOpacity(0.3),
                 width: 1,
               ),
             ),
             child: Row(
               children: [
-                const Icon(LucideIcons.info, color: AppColors.error, size: 16),
+                const Icon(
+                  LucideIcons.info,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Esta información será utilizada para personalizar las opciones de catering en los eventos.',
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.error,
+                      color: Colors.grey.shade700,
                     ),
                   ),
                 ),
