@@ -15,7 +15,7 @@ class ImagePickerBottomSheet extends StatelessWidget {
     super.key,
     required this.title,
     required this.onImageSelected,
-    this.enableCrop = true,
+    this.enableCrop = false,
   });
 
   @override

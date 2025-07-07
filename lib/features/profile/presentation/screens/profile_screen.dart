@@ -166,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   BlocBuilder<PostsBloc, PostsState>(
                     builder: (context, postsState) {
                       final postsCount = postsState is PostsLoaded
-                          ? (postsState as PostsLoaded).posts.length
+                          ? (postsState).posts.length
                           : 0;
 
                       return ProfileStatsWidget(
@@ -191,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (postsState is PostsError) {
                         ToastUtils.showError(
                           context: context,
-                          message: (postsState as PostsError).message,
+                          message: (postsState).message,
                         );
                       }
                     },

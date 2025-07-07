@@ -213,9 +213,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           },
                           onRemoveTempImage: (index) {
                             setState(() {
-                              final removedImage = _tempPostImages.removeAt(
-                                index,
-                              );
+                              _tempPostImages.removeAt(index);
                               _hasChanges = true;
                             });
                             debugPrint(
