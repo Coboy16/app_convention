@@ -59,6 +59,7 @@ class _SignUpFormState extends State<SignUpForm> {
             context: context,
             message: 'Cuenta creada exitosamente',
           );
+          AppRoutes.goToHome(context);
         } else if (state.status == AuthStatus.error) {
           ToastUtils.showError(
             context: context,

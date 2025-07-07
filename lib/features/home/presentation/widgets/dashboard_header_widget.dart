@@ -4,11 +4,50 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '/features/home/data/data.dart';
 import '/core/core.dart';
+import 'profile_menu_widget.dart'; // <-- IMPORTA EL NUEVO WIDGET
 
-class DashboardHeaderWidget extends StatelessWidget {
+// Convertido a StatefulWidget para manejar el GlobalKey
+class DashboardHeaderWidget extends StatefulWidget {
   final DashboardModel dashboard;
 
   const DashboardHeaderWidget({super.key, required this.dashboard});
+
+  @override
+  State<DashboardHeaderWidget> createState() => _DashboardHeaderWidgetState();
+}
+
+class _DashboardHeaderWidgetState extends State<DashboardHeaderWidget> {
+  final GlobalKey _avatarKey = GlobalKey();
+
+  void _showProfileMenu(BuildContext context) {
+    final RenderBox renderBox =
+        _avatarKey.currentContext!.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final position = renderBox.localToGlobal(Offset.zero);
+
+    final RelativeRect rect = RelativeRect.fromLTRB(
+      position.dx - 220,
+      position.dy + size.height + 10,
+      position.dx + size.width,
+      position.dy + size.height,
+    );
+
+    // Mostramos el menú
+    showMenu(
+      context: context,
+      position: rect,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 8,
+      items: [
+        const PopupMenuItem(
+          enabled: false,
+          padding: EdgeInsets.zero,
+          child: ProfileMenuWidget(),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +60,7 @@ class DashboardHeaderWidget extends StatelessWidget {
               Row(
                 children: [
                   AutoSizeText(
-                    dashboard.eventName,
+                    widget.dashboard.eventName,
                     style: AppTextStyles.h3,
                     maxLines: 1,
                   ),
@@ -37,7 +76,7 @@ class DashboardHeaderWidget extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    dashboard.location,
+                    widget.dashboard.location,
                     style: AppTextStyles.body2.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -53,9 +92,9 @@ class DashboardHeaderWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    dashboard.eventStatus == EventStatus.live
-                        ? 'En Vivo'
-                        : 'Inactivo',
+                    widget.dashboard.eventStatus == EventStatus.live
+                        ? 'Live'
+                        : 'Inactive',
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -67,15 +106,15 @@ class DashboardHeaderWidget extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: dashboard.role == UserRole.organizer
+                      color: widget.dashboard.role == UserRole.organizer
                           ? AppColors.warning
                           : AppColors.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      dashboard.role == UserRole.organizer
-                          ? 'ORGANIZADOR'
-                          : 'PARTICIPE',
+                      widget.dashboard.role == UserRole.organizer
+                          ? 'ORGANIZER'
+                          : 'ATTENDEE',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.surface,
                         fontWeight: FontWeight.w600,
@@ -87,7 +126,9 @@ class DashboardHeaderWidget extends StatelessWidget {
             ],
           ),
         ),
+        // Ícono de notificaciones
         Stack(
+          alignment: Alignment.center,
           children: [
             IconButton(
               onPressed: () {},
@@ -98,26 +139,44 @@ class DashboardHeaderWidget extends StatelessWidget {
               ),
             ),
             Positioned(
-              right: 8,
-              top: 8,
+              right: 12,
+              top: 12,
               child: Container(
-                width: 8,
-                height: 8,
+                padding: const EdgeInsets.all(4),
                 decoration: const BoxDecoration(
                   color: AppColors.error,
                   shape: BoxShape.circle,
+                ),
+                child: const Text(
+                  '3',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
           ],
         ),
         const SizedBox(width: 8),
-        CircleAvatar(
-          radius: 16,
-          backgroundColor: AppColors.surfaceVariant,
-          child: Text(
-            'JD',
-            style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
+
+        GestureDetector(
+          key: _avatarKey,
+          onTap: () {
+            _showProfileMenu(context);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: const BoxDecoration(
+              color: Color(0xFF8A2BE2),
+              shape: BoxShape.circle,
+            ),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.surfaceVariant,
+              child: Text('JD', style: AppTextStyles.caption),
+            ),
           ),
         ),
       ],

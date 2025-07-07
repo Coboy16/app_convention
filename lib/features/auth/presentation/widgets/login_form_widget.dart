@@ -55,6 +55,7 @@ class _LoginFormState extends State<LoginForm> {
             context: context,
             message: 'Inicio de sesión exitoso',
           );
+          AppRoutes.goToHome(context);
         } else if (state.status == AuthStatus.error) {
           ToastUtils.showError(
             context: context,
