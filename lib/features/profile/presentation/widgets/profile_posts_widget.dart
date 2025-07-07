@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:konecta/features/profile/domain/domain.dart';
+import 'package:konecta/features/profile/presentation/screens/image_viewer_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -63,14 +64,14 @@ class ProfilePostsWidget extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Posts grid - FIXED: Solo mostrar grid de fotos, SIN botón agregar
-          _buildPostsGrid(context),
+          // Posts content
+          _buildPostsContent(context),
         ],
       ),
     );
   }
 
-  Widget _buildPostsGrid(BuildContext context) {
+  Widget _buildPostsContent(BuildContext context) {
     if (postsState is PostsLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
@@ -99,31 +100,56 @@ class ProfilePostsWidget extends StatelessWidget {
         posts = [];
       }
 
+      // FIXED: Si no hay posts, mostrar grid vacío de 6 placeholders
       if (posts.isEmpty) {
-        return _buildEmptyState();
+        return _buildEmptyGrid();
       }
 
-      // FIXED: Solo mostrar grid de fotos de posts existentes
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 1,
-        ),
-        itemCount: posts.length, // REMOVED: +1 for add button
-        itemBuilder: (context, index) {
-          final post = posts[index];
-          final isDeleting = deletingPostId == post.id;
-
-          return _buildPostItem(post, isDeleting);
-        },
-      );
+      // FIXED: Si hay posts, mostrar solo los posts reales sin placeholders
+      return _buildPostsGrid(context, posts, deletingPostId);
     }
 
     return const SizedBox.shrink();
+  }
+
+  // FIXED: Grid vacío solo cuando no hay posts
+  Widget _buildEmptyGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: 6,
+      itemBuilder: (context, index) => _buildEmptyPlaceholder(),
+    );
+  }
+
+  // FIXED: Grid que solo muestra posts reales
+  Widget _buildPostsGrid(
+    BuildContext context,
+    List<PostEntity> posts,
+    String? deletingPostId,
+  ) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: posts.length, // FIXED: Solo la cantidad de posts reales
+      itemBuilder: (context, index) {
+        final post = posts[index];
+        final isDeleting = deletingPostId == post.id;
+        return _buildPostItem(context, post, isDeleting);
+      },
+    );
   }
 
   Widget _buildErrorState(String message) {
@@ -138,67 +164,87 @@ class ProfilePostsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Column(
-      children: [
-        const Icon(LucideIcons.image, size: 48, color: AppColors.textTertiary),
-        const SizedBox(height: 16),
-        Text('No hay posts aún', style: AppTextStyles.body1),
-        const SizedBox(height: 8),
-        Text(
-          'Los posts aparecerán aquí cuando los crees',
-          style: AppTextStyles.body2.copyWith(color: AppColors.textSecondary),
-        ),
-      ],
+  Widget _buildEmptyPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.inputBorder, width: 1),
+      ),
+      child: const Center(
+        child: Icon(LucideIcons.plus, color: AppColors.textTertiary, size: 24),
+      ),
     );
   }
 
-  Widget _buildPostItem(PostEntity post, bool isDeleting) {
+  Widget _buildPostItem(
+    BuildContext context,
+    PostEntity post,
+    bool isDeleting,
+  ) {
     return Stack(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.inputBorder, width: 1),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: post.imageUrls.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: post.imageUrls.first,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    placeholder: (context, url) => Container(
-                      color: AppColors.surfaceVariant,
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                          strokeWidth: 2,
+        // FIXED: Envolver en GestureDetector para abrir visor de imágenes
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ImageViewerScreen(
+                  imageUrls: post.imageUrls,
+                  initialIndex: 0,
+                  heroTag: 'post_${post.id}',
+                ),
+              ),
+            );
+          },
+          child: Hero(
+            tag: 'post_${post.id}',
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.inputBorder, width: 1),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: post.imageUrls.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: post.imageUrls.first,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        placeholder: (context, url) => Container(
+                          color: AppColors.surfaceVariant,
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: AppColors.surfaceVariant,
+                          child: const Center(
+                            child: Icon(
+                              LucideIcons.imageOff,
+                              color: AppColors.textTertiary,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: AppColors.surfaceVariant,
+                        child: const Center(
+                          child: Icon(
+                            LucideIcons.image,
+                            color: AppColors.textTertiary,
+                            size: 24,
+                          ),
                         ),
                       ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: AppColors.surfaceVariant,
-                      child: const Center(
-                        child: Icon(
-                          LucideIcons.imageOff,
-                          color: AppColors.textTertiary,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  )
-                : Container(
-                    color: AppColors.surfaceVariant,
-                    child: const Center(
-                      child: Icon(
-                        LucideIcons.image,
-                        color: AppColors.textTertiary,
-                        size: 24,
-                      ),
-                    ),
-                  ),
+              ),
+            ),
           ),
         ),
 

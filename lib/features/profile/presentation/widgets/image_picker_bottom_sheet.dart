@@ -51,17 +51,17 @@ class ImagePickerBottomSheet extends StatelessWidget {
   Future<void> _handleCamera(BuildContext context) async {
     Navigator.pop(context);
 
-    // Verificar permisos
-    final cameraPermission = await Permission.camera.request();
-    if (!cameraPermission.isGranted) {
-      ToastUtils.showError(
-        context: context,
-        message: 'Se requiere permiso de cámara',
-      );
-      return;
-    }
-
     try {
+      // Verificar y solicitar permisos de cámara
+      final cameraPermission = await _requestCameraPermission(context);
+      if (!cameraPermission) {
+        ToastUtils.showError(
+          context: context,
+          message: 'Se requiere permiso de cámara para tomar fotos',
+        );
+        return;
+      }
+
       final pickImageUseCase = sl<PickImageUseCase>();
       final result = await pickImageUseCase.fromCamera();
 
@@ -94,17 +94,17 @@ class ImagePickerBottomSheet extends StatelessWidget {
   Future<void> _handleGallery(BuildContext context) async {
     Navigator.pop(context);
 
-    // Verificar permisos
-    final storagePermission = await Permission.photos.request();
-    if (!storagePermission.isGranted) {
-      ToastUtils.showError(
-        context: context,
-        message: 'Se requiere permiso de galería',
-      );
-      return;
-    }
-
     try {
+      // Verificar y solicitar permisos de galería
+      final galleryPermission = await _requestGalleryPermission(context);
+      if (!galleryPermission) {
+        ToastUtils.showError(
+          context: context,
+          message: 'Se requiere permiso de galería para seleccionar fotos',
+        );
+        return;
+      }
+
       final pickImageUseCase = sl<PickImageUseCase>();
       final result = await pickImageUseCase.fromGallery();
 
@@ -132,6 +132,107 @@ class ImagePickerBottomSheet extends StatelessWidget {
         message: 'Error al seleccionar imagen: ${e.toString()}',
       );
     }
+  }
+
+  // Método para solicitar permisos de cámara
+  Future<bool> _requestCameraPermission(BuildContext context) async {
+    final status = await Permission.camera.status;
+
+    if (status.isGranted) {
+      return true;
+    }
+
+    if (status.isDenied) {
+      final result = await Permission.camera.request();
+      return result.isGranted;
+    }
+
+    if (status.isPermanentlyDenied) {
+      // Mostrar diálogo para abrir configuración
+      _showPermissionDialog(
+        context,
+        'Permiso de Cámara',
+        'Para tomar fotos necesitas habilitar el permiso de cámara en la configuración.',
+      );
+      return false;
+    }
+
+    return false;
+  }
+
+  // Método para solicitar permisos de galería
+  Future<bool> _requestGalleryPermission(BuildContext context) async {
+    Permission permission;
+
+    // Usar el permiso correcto según la plataforma
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      permission = Permission.photos;
+    } else {
+      // Para Android - verificar versión
+      permission = Permission.storage;
+    }
+
+    final status = await permission.status;
+
+    if (status.isGranted) {
+      return true;
+    }
+
+    if (status.isDenied) {
+      final result = await permission.request();
+      return result.isGranted;
+    }
+
+    if (status.isPermanentlyDenied) {
+      // Mostrar diálogo para abrir configuración
+      _showPermissionDialog(
+        context,
+        'Permiso de Galería',
+        'Para seleccionar fotos necesitas habilitar el permiso de galería en la configuración.',
+      );
+      return false;
+    }
+
+    return false;
+  }
+
+  // Mostrar diálogo para permisos denegados permanentemente
+  void _showPermissionDialog(
+    BuildContext context,
+    String title,
+    String message,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title, style: AppTextStyles.h4),
+        content: Text(message, style: AppTextStyles.body2),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancelar',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: Text(
+              'Abrir Configuración',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

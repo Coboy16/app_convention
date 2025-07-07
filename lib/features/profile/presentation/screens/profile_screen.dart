@@ -255,13 +255,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showEditProfileModal(BuildContext context, profile) {
-    Navigator.push(
+  // FIXED: Método modificado para refrescar posts al regresar
+  void _showEditProfileModal(BuildContext context, profile) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditProfileScreen(profile: profile),
       ),
     );
+
+    // FIXED: Refrescar posts cuando se regresa de editar perfil
+    if (result == true && currentUserId != null) {
+      // Refrescar tanto el perfil como los posts
+      context.read<ProfileBloc>().add(
+        ProfileRefreshRequested(userId: currentUserId!),
+      );
+      context.read<PostsBloc>().add(
+        PostsRefreshRequested(userId: currentUserId!),
+      );
+    }
   }
 
   void _showAvatarEditModal(BuildContext context) {
