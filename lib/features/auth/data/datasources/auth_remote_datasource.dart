@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/core/errors/exceptions.dart';
@@ -69,6 +70,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on FirebaseAuthException catch (e) {
       throw ServerException(_getFirebaseAuthErrorMessage(e.code));
     } catch (e) {
+      debugPrint('Error inesperado: ${e.toString()}');
       throw ServerException('Error inesperado: ${e.toString()}');
     }
   }
@@ -110,6 +112,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on FirebaseAuthException catch (e) {
       throw ServerException(_getFirebaseAuthErrorMessage(e.code));
     } catch (e) {
+      debugPrint('Error inesperado: ${e.toString()}');
       throw ServerException('Error inesperado: ${e.toString()}');
     }
   }
@@ -168,6 +171,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on FirebaseAuthException catch (e) {
       throw ServerException(_getFirebaseAuthErrorMessage(e.code));
     } catch (e) {
+      debugPrint('Error inesperado: ${e.toString()}');
       throw ServerException('Error inesperado: ${e.toString()}');
     }
   }

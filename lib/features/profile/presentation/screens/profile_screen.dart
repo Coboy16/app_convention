@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:konecta/features/posts/presentation/screens/screens.dart';
 import 'package:konecta/shared/bloc/blocs.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '/features/profile/presentation/screens/screens.dart';
 import '/features/profile/presentation/widgets/widgets.dart';
@@ -22,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadUserProfile();
+    _requestPermissions();
   }
 
   void _loadUserProfile() {
@@ -35,6 +37,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ProfileLoadRequested(userId: currentUserId!),
       );
       context.read<PostsBloc>().add(PostsLoadRequested(userId: currentUserId!));
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+      Permission.photos, // para iOS y Android 13+
+      Permission.storage, // para Android ≤ 12
+    ].request();
+
+    if (statuses.values.any((status) => status.isPermanentlyDenied)) {
+      debugPrint('Algunos permisos están permanentemente denegados.');
     }
   }
 
