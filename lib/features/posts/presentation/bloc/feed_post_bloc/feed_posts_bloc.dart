@@ -318,7 +318,6 @@ class FeedPostsBloc extends Bloc<FeedPostsEvent, FeedPostsState> {
     }
 
     try {
-      // Marcar como vista en Firebase (operación en segundo plano)
       final result = await markStoryAsViewedUseCase(event.storyId);
 
       result.fold(
@@ -326,13 +325,10 @@ class FeedPostsBloc extends Bloc<FeedPostsEvent, FeedPostsState> {
           debugPrint(
             '❌ Error al marcar historia como vista: ${failure.message}',
           );
-          // No emitir error, es una operación en segundo plano
         },
         (_) {
           debugPrint('✅ Historia marcada como vista: ${event.storyId}');
 
-          // CORREGIDO: Actualizar el estado localmente SIN emitir nuevo estado
-          // Esto evita que se pierda el estado cuando el usuario regresa
           final updatedStories = currentState.stories.map((story) {
             if (story.id == event.storyId) {
               return story.copyWith(isViewedByCurrentUser: true);
@@ -340,8 +336,6 @@ class FeedPostsBloc extends Bloc<FeedPostsEvent, FeedPostsState> {
             return story;
           }).toList();
 
-          // IMPORTANTE: Solo emitir si realmente cambió algo y el usuario está en la pantalla principal
-          // No emitir mientras está viendo stories para evitar conflictos
           if (mounted) {
             emit(
               FeedPostsLoaded(

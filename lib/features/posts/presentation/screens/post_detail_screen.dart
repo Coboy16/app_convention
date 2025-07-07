@@ -82,105 +82,120 @@ ${widget.post.hashtags.isNotEmpty ? widget.post.hashtags.join(' ') : ''}
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Custom AppBar
-            Container(
-              color: AppColors.surface,
-              padding: EdgeInsets.symmetric(
-                horizontal: AppResponsive.horizontalPadding(context),
-                vertical: 12,
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      LucideIcons.arrowLeft,
-                      color: AppColors.textPrimary,
-                      size: 24,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 16),
-                  Text('Post', style: AppTextStyles.h4),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: _sharePost, // IMPLEMENTADO
-                    icon: const Icon(
-                      LucideIcons.share,
-                      color: AppColors.textPrimary,
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: BlocListener<FeedPostsBloc, FeedPostsState>(
-                listener: (context, state) {
-                  if (state is FeedCommentsLoaded &&
-                      state.postId == widget.post.id) {
-                    setState(() {
-                      _comments = state.comments;
-                      _isLoadingComments = false;
-                    });
-                  } else if (state is FeedCommentAdded) {
-                    setState(() {
-                      _comments.insert(0, state.comment);
-                    });
-                    ToastUtils.showSuccess(
-                      context: context,
-                      message: 'Comentario agregado',
-                    );
-                  } else if (state is FeedPostsError) {
-                    setState(() {
-                      _isLoadingComments = false;
-                    });
-                  }
-                },
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: EdgeInsets.all(
-                    AppResponsive.horizontalPadding(context),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Post content
-                      _PostContent(
-                        post: widget.post,
-                        onLike: _likePost,
-                        onShare: _sharePost,
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          final currentState = context.read<FeedPostsBloc>().state;
+          if (currentState is FeedPostsError) {
+            // Reload del feed si había errores
+            context.read<FeedPostsBloc>().loadFeed();
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Custom AppBar
+              Container(
+                color: AppColors.surface,
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppResponsive.horizontalPadding(context),
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        LucideIcons.arrowLeft,
+                        color: AppColors.textPrimary,
+                        size: 24,
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Comments section
-                      _CommentsSection(
-                        comments: _comments,
-                        isLoading: _isLoadingComments,
-                        onCommentLike: (commentId) {
-                          context.read<FeedPostsBloc>().toggleCommentLike(
-                            commentId,
-                          );
-                        },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 16),
+                    Text('Post', style: AppTextStyles.h4),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: _sharePost, // IMPLEMENTADO
+                      icon: const Icon(
+                        LucideIcons.share,
+                        color: AppColors.textPrimary,
+                        size: 24,
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Expanded(
+                child: BlocListener<FeedPostsBloc, FeedPostsState>(
+                  listener: (context, state) {
+                    if (state is FeedCommentsLoaded &&
+                        state.postId == widget.post.id) {
+                      setState(() {
+                        _comments = state.comments;
+                        _isLoadingComments = false;
+                      });
+                    } else if (state is FeedCommentAdded) {
+                      setState(() {
+                        _comments.insert(0, state.comment);
+                      });
+                      ToastUtils.showSuccess(
+                        context: context,
+                        message: 'Comentario agregado',
+                      );
+                    } else if (state is FeedPostsError) {
+                      setState(() {
+                        _isLoadingComments = false;
+                      });
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: EdgeInsets.all(
+                      AppResponsive.horizontalPadding(context),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Post content
+                        _PostContent(
+                          post: widget.post,
+                          onLike: _likePost,
+                          onShare: _sharePost,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Comments section
+                        _CommentsSection(
+                          comments: _comments,
+                          isLoading: _isLoadingComments,
+                          onCommentLike: (commentId) {
+                            context.read<FeedPostsBloc>().toggleCommentLike(
+                              commentId,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Comment input
-            _CommentInput(controller: _commentController, onSend: _addComment),
-          ],
+              // Comment input
+              _CommentInput(
+                controller: _commentController,
+                onSend: _addComment,
+              ),
+            ],
+          ),
         ),
       ),
     );
