@@ -132,6 +132,7 @@ dependencies:
   # file
   file_picker: ^10.1.9
   image_picker: ^1.1.2
+  image_cropper: ^9.1.0
 
   # toast
   toastification: ^3.0.2

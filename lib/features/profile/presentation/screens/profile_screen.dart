@@ -1,71 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:konecta/features/posts/presentation/screens/screens.dart';
+import 'package:konecta/shared/bloc/blocs.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '/features/profile/presentation/screens/screens.dart';
 import '/features/profile/presentation/widgets/widgets.dart';
-import '/features/profile/presentation/bloc/blocs.dart';
 import '/core/core.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String? currentUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  void _loadUserProfile() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState.status == AuthStatus.authenticated &&
+        authState.user != null) {
+      currentUserId = authState.user!.id;
+
+      // Cargar perfil y posts
+      context.read<ProfileBloc>().add(
+        ProfileLoadRequested(userId: currentUserId!),
+      );
+      context.read<PostsBloc>().add(PostsLoadRequested(userId: currentUserId!));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProfileBloc, ProfileState>(
       listener: (context, state) {
         if (state is ProfileError) {
           ToastUtils.showError(context: context, message: state.message);
-        } else if (state is ProfileUpdated) {
-          ToastUtils.showSuccess(
-            context: context,
-            message: 'Profile updated successfully',
-          );
         }
       },
       builder: (context, state) {
         if (state is ProfileLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (state is ProfileError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  LucideIcons.circleAlert,
-                  size: 64,
-                  color: AppColors.error,
-                ),
-                const SizedBox(height: 16),
-                Text('Error loading profile', style: AppTextStyles.h4),
-                const SizedBox(height: 8),
-                Text(
-                  state.message,
-                  style: AppTextStyles.body2,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    context.read<ProfileBloc>().loadProfile();
-                  },
-                  icon: const Icon(LucideIcons.refreshCw),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
           );
         }
 
-        if (state is ProfileLoaded || state is ProfileUpdating) {
+        if (state is ProfileError) {
+          return _buildErrorState(state.message);
+        }
+
+        if (state is ProfileLoaded ||
+            state is ProfileUpdating ||
+            state is ProfileImageUploading) {
           final profile = state is ProfileLoaded
               ? state.profile
-              : (state as ProfileUpdating).profile;
+              : state is ProfileUpdating
+              ? state.profile
+              : (state as ProfileImageUploading).profile;
+
+          final isUpdating =
+              state is ProfileUpdating || state is ProfileImageUploading;
 
           return RefreshIndicator(
             onRefresh: () async {
-              context.read<ProfileBloc>().refreshProfile();
+              if (currentUserId != null) {
+                context.read<ProfileBloc>().add(
+                  ProfileRefreshRequested(userId: currentUserId!),
+                );
+                context.read<PostsBloc>().add(
+                  PostsRefreshRequested(userId: currentUserId!),
+                );
+              }
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -81,12 +94,25 @@ class ProfileScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text('Profile', style: AppTextStyles.h4),
+                          child: Text('Perfil', style: AppTextStyles.h4),
                         ),
+                        if (isUpdating) ...[
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
                         IconButton(
-                          onPressed: () {
-                            _showEditProfileModal(context, profile);
-                          },
+                          onPressed: isUpdating
+                              ? null
+                              : () {
+                                  _showEditProfileModal(context, profile);
+                                },
                           icon: const Icon(
                             LucideIcons.penLine,
                             color: AppColors.textPrimary,
@@ -98,12 +124,13 @@ class ProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Profile Header
                   ProfileHeaderWidget(
                     profile: profile,
-                    onEditProfile: () {
-                      _showEditProfileModal(context, profile);
-                    },
+                    onEditProfile: isUpdating
+                        ? null
+                        : () {
+                            _showEditProfileModal(context, profile);
+                          },
                     onSettings: () {
                       Navigator.push(
                         context,
@@ -112,32 +139,27 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    onAvatarEdit: () {
-                      _showAvatarEditModal(context);
-                    },
+                    onAvatarEdit: isUpdating
+                        ? null
+                        : () {
+                            _showAvatarEditModal(context);
+                          },
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Stats
-                  ProfileStatsWidget(
-                    stats: profile.stats,
-                    onPostsTap: () {
-                      ToastUtils.showInfo(
-                        context: context,
-                        message: 'Posts view coming soon...',
-                      );
-                    },
-                    onFollowingTap: () {
-                      ToastUtils.showInfo(
-                        context: context,
-                        message: 'Following list coming soon...',
-                      );
-                    },
-                    onFollowersTap: () {
-                      ToastUtils.showInfo(
-                        context: context,
-                        message: 'Followers list coming soon...',
+                  // Stats (posts count from PostsBloc)
+                  BlocBuilder<PostsBloc, PostsState>(
+                    builder: (context, postsState) {
+                      final postsCount = postsState is PostsLoaded
+                          ? (postsState as PostsLoaded).posts.length
+                          : 0;
+
+                      return ProfileStatsWidget(
+                        postsCount: postsCount,
+                        onPostsTap: () {
+                          // Scroll to posts section
+                        },
                       );
                     },
                   ),
@@ -149,8 +171,32 @@ class ProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Posts
-                  ProfilePostsWidget(postsCount: profile.stats.posts),
+                  // Posts Section
+                  BlocConsumer<PostsBloc, PostsState>(
+                    listener: (context, postsState) {
+                      if (postsState is PostsError) {
+                        ToastUtils.showError(
+                          context: context,
+                          message: (postsState as PostsError).message,
+                        );
+                      }
+                    },
+                    builder: (context, postsState) {
+                      return ProfilePostsWidget(
+                        postsState: postsState,
+                        onAddPost: isUpdating
+                            ? null
+                            : () {
+                                _showAddPostModal(context);
+                              },
+                        onDeletePost: (postId) {
+                          if (currentUserId != null) {
+                            _showDeletePostDialog(context, postId);
+                          }
+                        },
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 20),
                 ],
@@ -159,8 +205,39 @@ class ProfileScreen extends StatelessWidget {
           );
         }
 
-        return Center(child: const Text('Error'));
+        return const Center(child: Text('Estado desconocido'));
       },
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(LucideIcons.circleAlert, size: 64, color: AppColors.error),
+          const SizedBox(height: 16),
+          Text('Error al cargar perfil', style: AppTextStyles.h4),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: AppTextStyles.body2,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              if (currentUserId != null) {
+                context.read<ProfileBloc>().add(
+                  ProfileLoadRequested(userId: currentUserId!),
+                );
+              }
+            },
+            icon: const Icon(LucideIcons.refreshCw),
+            label: const Text('Reintentar'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -179,79 +256,66 @@ class ProfileScreen extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Change Profile Picture', style: AppTextStyles.h4),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _AvatarOption(
-                  icon: LucideIcons.camera,
-                  label: 'Camera',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ToastUtils.showInfo(
-                      context: context,
-                      message: 'Camera feature coming soon...',
-                    );
-                  },
-                ),
-                _AvatarOption(
-                  icon: LucideIcons.image,
-                  label: 'Gallery',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ToastUtils.showInfo(
-                      context: context,
-                      message: 'Gallery feature coming soon...',
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
+      builder: (context) => ImagePickerBottomSheet(
+        title: 'Cambiar Foto de Perfil',
+        onImageSelected: (imagePath) {
+          if (currentUserId != null) {
+            context.read<ProfileBloc>().add(
+              ProfileImageUpdateRequested(
+                userId: currentUserId!,
+                imagePath: imagePath,
+              ),
+            );
+          }
+        },
       ),
     );
   }
-}
 
-class _AvatarOption extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+  void _showAddPostModal(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreatePostScreen()),
+    );
+  }
 
-  const _AvatarOption({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.inputBorder, width: 1),
+  void _showDeletePostDialog(BuildContext context, String postId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Eliminar Post', style: AppTextStyles.h4),
+        content: Text(
+          '¿Estás seguro de que quieres eliminar este post?',
+          style: AppTextStyles.body2,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.primary, size: 32),
-            const SizedBox(height: 8),
-            Text(label, style: AppTextStyles.labelMedium),
-          ],
-        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancelar',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (currentUserId != null) {
+                context.read<PostsBloc>().add(
+                  PostDeleteRequested(userId: currentUserId!, postId: postId),
+                );
+              }
+            },
+            child: Text(
+              'Eliminar',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

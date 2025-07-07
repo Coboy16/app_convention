@@ -8,7 +8,7 @@ import '/features/posts/data/data.dart';
 import '/core/core.dart';
 
 class PostItemWidget extends StatelessWidget {
-  final PostModel post;
+  final PostTwoModel post;
   final VoidCallback onLike;
   final VoidCallback onComment;
   final VoidCallback onShare;

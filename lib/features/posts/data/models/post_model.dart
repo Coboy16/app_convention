@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-class PostModel extends Equatable {
+class PostTwoModel extends Equatable {
   final String id;
   final String userId;
   final String username;
@@ -14,7 +14,7 @@ class PostModel extends Equatable {
   final PostType type;
   final String? role;
 
-  const PostModel({
+  const PostTwoModel({
     required this.id,
     required this.userId,
     required this.username,
@@ -29,8 +29,8 @@ class PostModel extends Equatable {
     this.role,
   });
 
-  factory PostModel.fromJson(Map<String, dynamic> json) {
-    return PostModel(
+  factory PostTwoModel.fromJson(Map<String, dynamic> json) {
+    return PostTwoModel(
       id: json['id'] as String,
       userId: json['userId'] as String,
       username: json['username'] as String,
@@ -66,7 +66,7 @@ class PostModel extends Equatable {
     };
   }
 
-  PostModel copyWith({
+  PostTwoModel copyWith({
     String? id,
     String? userId,
     String? username,
@@ -80,7 +80,7 @@ class PostModel extends Equatable {
     PostType? type,
     String? role,
   }) {
-    return PostModel(
+    return PostTwoModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       username: username ?? this.username,
@@ -113,8 +113,8 @@ class PostModel extends Equatable {
   ];
 
   // Mock data para desarrollo
-  static List<PostModel> get mockPosts => [
-    PostModel(
+  static List<PostTwoModel> get mockPosts => [
+    PostTwoModel(
       id: '1',
       userId: 'admin1',
       username: 'Event Team',
@@ -127,7 +127,7 @@ class PostModel extends Equatable {
       type: PostType.admin,
       role: 'Organizer',
     ),
-    PostModel(
+    PostTwoModel(
       id: '2',
       userId: 'user1',
       username: 'Maria Rodriguez',
@@ -138,7 +138,7 @@ class PostModel extends Equatable {
       commentsCount: 5,
       type: PostType.user,
     ),
-    PostModel(
+    PostTwoModel(
       id: '3',
       userId: 'admin2',
       username: 'Marketing Team',

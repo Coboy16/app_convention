@@ -9,3 +9,4 @@ export 'settings_item_widget.dart';
 export 'settings_toggle_widget.dart';
 export 'settings_radio_widget.dart';
 export 'danger_zone_widget.dart';
+export 'image_picker_bottom_sheet.dart';

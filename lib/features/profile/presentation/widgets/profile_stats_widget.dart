@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
-import '/features/profile/data/data.dart';
 import '/core/core.dart';
 
 class ProfileStatsWidget extends StatelessWidget {
-  final ProfileStats stats;
+  final int postsCount;
   final VoidCallback? onPostsTap;
-  final VoidCallback? onFollowingTap;
-  final VoidCallback? onFollowersTap;
 
   const ProfileStatsWidget({
     super.key,
-    required this.stats,
+    required this.postsCount,
     this.onPostsTap,
-    this.onFollowingTap,
-    this.onFollowersTap,
   });
 
   @override
@@ -28,19 +23,11 @@ class ProfileStatsWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _StatItem(value: stats.posts, label: 'Posts', onTap: onPostsTap),
+          _StatItem(value: postsCount, label: 'Posts', onTap: onPostsTap),
           _VerticalDivider(),
-          _StatItem(
-            value: stats.following,
-            label: 'Following',
-            onTap: onFollowingTap,
-          ),
+          _StatItem(value: 0, label: 'Siguiendo', onTap: () {}),
           _VerticalDivider(),
-          _StatItem(
-            value: stats.followers,
-            label: 'Followers',
-            onTap: onFollowersTap,
-          ),
+          _StatItem(value: 0, label: 'Seguidores', onTap: () {}),
         ],
       ),
     );

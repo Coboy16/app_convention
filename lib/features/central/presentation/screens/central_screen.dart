@@ -12,6 +12,7 @@ class CentralScreen extends StatefulWidget {
 
 class _CentralScreenState extends State<CentralScreen> {
   bool _profileInitialized = false;
+  String? currentUserId;
 
   @override
   void initState() {
@@ -26,7 +27,7 @@ class _CentralScreenState extends State<CentralScreen> {
         if (state is NavigationChanged &&
             state.selectedIndex == 2 &&
             !_profileInitialized) {
-          context.read<ProfileBloc>().loadProfile();
+          _loadUserProfile();
           _profileInitialized = true;
         }
       },
@@ -39,6 +40,20 @@ class _CentralScreenState extends State<CentralScreen> {
         },
       ),
     );
+  }
+
+  void _loadUserProfile() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState.status == AuthStatus.authenticated &&
+        authState.user != null) {
+      currentUserId = authState.user!.id;
+
+      // Cargar perfil y posts
+      context.read<ProfileBloc>().add(
+        ProfileLoadRequested(userId: currentUserId!),
+      );
+      context.read<PostsBloc>().add(PostsLoadRequested(userId: currentUserId!));
+    }
   }
 
   Widget _getSelectedView(NavigationState state) {

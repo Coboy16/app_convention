@@ -29,7 +29,7 @@ class _ProfileMenuWidgetState extends State<ProfileMenuWidget> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Cerrar diálogo
+                Navigator.of(dialogContext).pop(); 
               },
               child: Text(
                 'Cancelar',
@@ -40,8 +40,8 @@ class _ProfileMenuWidgetState extends State<ProfileMenuWidget> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Cerrar diálogo
-                Navigator.pop(context); // Cerrar el menú
+                Navigator.of(dialogContext).pop(); 
+                Navigator.pop(context);
 
                 // Disparar evento de logout
                 context.read<AuthBloc>().add(AuthLogoutRequested());

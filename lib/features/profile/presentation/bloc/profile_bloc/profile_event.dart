@@ -7,24 +7,50 @@ abstract class ProfileEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class ProfileLoadRequested extends ProfileEvent {}
+class ProfileLoadRequested extends ProfileEvent {
+  final String userId;
 
-class ProfileUpdateRequested extends ProfileEvent {
-  final ProfileModel profile;
-
-  const ProfileUpdateRequested({required this.profile});
+  const ProfileLoadRequested({required this.userId});
 
   @override
-  List<Object> get props => [profile];
+  List<Object> get props => [userId];
 }
 
-class ProfileRefreshRequested extends ProfileEvent {}
+class ProfileUpdateRequested extends ProfileEvent {
+  final String userId;
+  final String? name;
+  final String? bio;
+  final List<String>? allergies;
 
-class ProfileAvatarUpdateRequested extends ProfileEvent {
-  final String avatarUrl;
-
-  const ProfileAvatarUpdateRequested({required this.avatarUrl});
+  const ProfileUpdateRequested({
+    required this.userId,
+    this.name,
+    this.bio,
+    this.allergies,
+  });
 
   @override
-  List<Object> get props => [avatarUrl];
+  List<Object?> get props => [userId, name, bio, allergies];
+}
+
+class ProfileImageUpdateRequested extends ProfileEvent {
+  final String userId;
+  final String imagePath;
+
+  const ProfileImageUpdateRequested({
+    required this.userId,
+    required this.imagePath,
+  });
+
+  @override
+  List<Object> get props => [userId, imagePath];
+}
+
+class ProfileRefreshRequested extends ProfileEvent {
+  final String userId;
+
+  const ProfileRefreshRequested({required this.userId});
+
+  @override
+  List<Object> get props => [userId];
 }

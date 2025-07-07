@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '/features/profile/data/data.dart';
+import '/features/profile/domain/domain.dart';
 import '/core/core.dart';
 
 class ProfileInfoWidget extends StatelessWidget {
-  final ProfileModel profile;
+  final ProfileEntity profile;
 
   const ProfileInfoWidget({super.key, required this.profile});
 
@@ -31,12 +31,12 @@ class ProfileInfoWidget extends StatelessWidget {
             children: [
               const Icon(LucideIcons.user, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
-              AutoSizeText('About', style: AppTextStyles.h4, maxLines: 1),
+              AutoSizeText('Acerca de', style: AppTextStyles.h4, maxLines: 1),
             ],
           ),
           const SizedBox(height: 12),
           AutoSizeText(
-            profile.about,
+            profile.bio.isNotEmpty ? profile.bio : 'Sin información adicional',
             style: AppTextStyles.body2,
             maxLines: 4,
             overflow: TextOverflow.ellipsis,
@@ -44,18 +44,75 @@ class ProfileInfoWidget extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Dietary Restrictions
-          if (profile.dietaryRestrictions.isNotEmpty) ...[
+          // Role section
+          Row(
+            children: [
+              const Icon(
+                LucideIcons.briefcase,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              AutoSizeText(
+                'Rol',
+                style: AppTextStyles.labelMedium,
+                maxLines: 1,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: profile.isOrganizer
+                  ? AppColors.warning.withOpacity(0.1)
+                  : AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: profile.isOrganizer
+                    ? AppColors.warning.withOpacity(0.3)
+                    : AppColors.primary.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  profile.isOrganizer ? LucideIcons.crown : LucideIcons.user,
+                  color: profile.isOrganizer
+                      ? AppColors.warning
+                      : AppColors.primary,
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                AutoSizeText(
+                  profile.isOrganizer ? 'Organizador' : 'Participante',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: profile.isOrganizer
+                        ? AppColors.warning
+                        : AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ),
+
+          // Allergies section
+          if (profile.allergies.isNotEmpty) ...[
+            const SizedBox(height: 20),
             Row(
               children: [
                 const Icon(
-                  LucideIcons.utensils,
+                  LucideIcons.triangleAlert,
                   color: AppColors.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 AutoSizeText(
-                  'Dietary Restrictions',
+                  'Alergias',
                   style: AppTextStyles.labelMedium,
                   maxLines: 1,
                 ),
@@ -65,21 +122,24 @@ class ProfileInfoWidget extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: profile.dietaryRestrictions.map((restriction) {
+              children: profile.allergies.map((allergy) {
                 return Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
+                    color: AppColors.error.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.inputBorder, width: 1),
+                    border: Border.all(
+                      color: AppColors.error.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
                   child: AutoSizeText(
-                    restriction,
+                    allergy,
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.error,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -87,44 +147,7 @@ class ProfileInfoWidget extends StatelessWidget {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 20),
           ],
-
-          // Location
-          Row(
-            children: [
-              const Icon(
-                LucideIcons.mapPin,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              AutoSizeText(
-                'Location',
-                style: AppTextStyles.labelMedium,
-                maxLines: 1,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                LucideIcons.mapPin,
-                color: AppColors.textSecondary,
-                size: 16,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: AutoSizeText(
-                  profile.location,
-                  style: AppTextStyles.body2,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

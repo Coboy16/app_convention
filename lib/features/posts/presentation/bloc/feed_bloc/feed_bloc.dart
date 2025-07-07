@@ -6,7 +6,7 @@ part 'feed_event.dart';
 part 'feed_state.dart';
 
 class FeedBloc extends Bloc<FeedEvent, FeedState> {
-  List<PostModel> _posts = [];
+  List<PostTwoModel> _posts = [];
   List<StoryModel> _stories = [];
 
   FeedBloc() : super(FeedInitial()) {
@@ -28,7 +28,7 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
       // Simular llamada a API
       await Future.delayed(const Duration(seconds: 1));
 
-      _posts = PostModel.mockPosts;
+      _posts = PostTwoModel.mockPosts;
       _stories = StoryModel.mockStories;
 
       emit(FeedLoaded(posts: _posts, stories: _stories));
@@ -45,7 +45,7 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
       // Simular refresh
       await Future.delayed(const Duration(milliseconds: 500));
 
-      _posts = PostModel.mockPosts;
+      _posts = PostTwoModel.mockPosts;
       _stories = StoryModel.mockStories;
 
       emit(FeedLoaded(posts: _posts, stories: _stories));

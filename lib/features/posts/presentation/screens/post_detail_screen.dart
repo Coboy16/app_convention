@@ -10,7 +10,7 @@ import '/features/posts/data/data.dart';
 import '/core/core.dart';
 
 class PostDetailScreen extends StatefulWidget {
-  final PostModel post;
+  final PostTwoModel post;
 
   const PostDetailScreen({super.key, required this.post});
 
@@ -152,7 +152,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 }
 
 class _PostContent extends StatelessWidget {
-  final PostModel post;
+  final PostTwoModel post;
 
   const _PostContent({required this.post});
 

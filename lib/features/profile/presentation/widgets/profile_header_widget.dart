@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:konecta/features/profile/domain/entities/profile_entity.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '/features/profile/presentation/widgets/widgets.dart';
-import '/features/profile/data/data.dart';
 import '/core/core.dart';
 
 class ProfileHeaderWidget extends StatelessWidget {
-  final ProfileModel profile;
+  final ProfileEntity profile;
   final VoidCallback? onEditProfile;
   final VoidCallback? onSettings;
   final VoidCallback? onAvatarEdit;
@@ -29,7 +29,7 @@ class ProfileHeaderWidget extends StatelessWidget {
         children: [
           // Avatar
           ProfileAvatarWidget(
-            avatarUrl: profile.avatarUrl,
+            avatarUrl: profile.photoUrl,
             name: profile.name,
             size: AppResponsive.isMobile(context) ? 80 : 100,
             isEditable: true,

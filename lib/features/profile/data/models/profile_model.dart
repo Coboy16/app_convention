@@ -1,141 +1,118 @@
-import 'package:equatable/equatable.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../domain/entities/profile_entity.dart';
 
-class ProfileModel extends Equatable {
-  final String id;
-  final String name;
-  final String email;
-  final String? avatarUrl;
-  final String role;
-  final String about;
-  final List<String> dietaryRestrictions;
-  final String location;
-  final ProfileStats stats;
-
+class ProfileModel extends ProfileEntity {
   const ProfileModel({
-    required this.id,
-    required this.name,
-    required this.email,
-    this.avatarUrl,
-    required this.role,
-    required this.about,
-    required this.dietaryRestrictions,
-    required this.location,
-    required this.stats,
+    required super.id,
+    required super.name,
+    required super.email,
+    super.photoUrl,
+    required super.role,
+    required super.bio,
+    required super.allergies,
+    required super.createdAt,
+    required super.updatedAt,
   });
 
-  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+  factory ProfileModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+
     return ProfileModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      avatarUrl: json['avatarUrl'] as String?,
-      role: json['role'] as String,
-      about: json['about'] as String,
-      dietaryRestrictions: List<String>.from(
-        json['dietaryRestrictions'] as List,
-      ),
-      location: json['location'] as String,
-      stats: ProfileStats.fromJson(json['stats'] as Map<String, dynamic>),
+      id: doc.id,
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      photoUrl: data['photoUrl'],
+      role: data['role'] ?? 'participant',
+      bio: data['bio'] ?? '',
+      allergies: _parseAllergies(data['allergies']),
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  // Método helper para manejar la conversión de alergias
+  static List<String> _parseAllergies(dynamic allergiesData) {
+    if (allergiesData == null) return [];
+
+    if (allergiesData is List) {
+      return allergiesData.map((item) => item.toString()).toList();
+    }
+
+    if (allergiesData is String) {
+      // Si es un string, intentar dividirlo o retornarlo como lista
+      return [allergiesData];
+    }
+
+    return [];
+  }
+
+  factory ProfileModel.fromMap(Map<String, dynamic> map, String id) {
+    return ProfileModel(
+      id: id,
+      name: map['name'] ?? '',
+      email: map['email'] ?? '',
+      photoUrl: map['photoUrl'],
+      role: map['role'] ?? 'participant',
+      bio: map['bio'] ?? '',
+      allergies: _parseAllergies(map['allergies']),
+      createdAt: map['createdAt'] is Timestamp
+          ? (map['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(map['createdAt']),
+      updatedAt: map['updatedAt'] is Timestamp
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : DateTime.parse(map['updatedAt']),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'email': email,
-      'avatarUrl': avatarUrl,
+      'photoUrl': photoUrl,
       'role': role,
-      'about': about,
-      'dietaryRestrictions': dietaryRestrictions,
-      'location': location,
-      'stats': stats.toJson(),
+      'bio': bio,
+      'allergies': allergies,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
     };
+  }
+
+  // Factory constructor desde Entity
+  factory ProfileModel.fromEntity(ProfileEntity entity) {
+    return ProfileModel(
+      id: entity.id,
+      name: entity.name,
+      email: entity.email,
+      photoUrl: entity.photoUrl,
+      role: entity.role,
+      bio: entity.bio,
+      allergies: entity.allergies,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
   }
 
   ProfileModel copyWith({
     String? id,
     String? name,
     String? email,
-    String? avatarUrl,
+    String? photoUrl,
     String? role,
-    String? about,
-    List<String>? dietaryRestrictions,
-    String? location,
-    ProfileStats? stats,
+    String? bio,
+    List<String>? allergies,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return ProfileModel(
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+      photoUrl: photoUrl ?? this.photoUrl,
       role: role ?? this.role,
-      about: about ?? this.about,
-      dietaryRestrictions: dietaryRestrictions ?? this.dietaryRestrictions,
-      location: location ?? this.location,
-      stats: stats ?? this.stats,
+      bio: bio ?? this.bio,
+      allergies: allergies ?? this.allergies,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-
-  @override
-  List<Object?> get props => [
-    id,
-    name,
-    email,
-    avatarUrl,
-    role,
-    about,
-    dietaryRestrictions,
-    location,
-    stats,
-  ];
-
-  // Mock data para desarrollo
-  static ProfileModel get mockProfile => ProfileModel(
-    id: '1',
-    name: 'John Doe',
-    email: 'john.doe@konecta.com',
-    avatarUrl: null,
-    role: 'Participant',
-    about:
-        'Digital Marketing Specialist passionate about innovation and technology. Excited to connect with fellow professionals at Convention 2024!',
-    dietaryRestrictions: ['Vegetarian', 'No nuts'],
-    location: 'Lima, Peru',
-    stats: const ProfileStats(posts: 12, following: 45, followers: 38),
-  );
-}
-
-class ProfileStats extends Equatable {
-  final int posts;
-  final int following;
-  final int followers;
-
-  const ProfileStats({
-    required this.posts,
-    required this.following,
-    required this.followers,
-  });
-
-  factory ProfileStats.fromJson(Map<String, dynamic> json) {
-    return ProfileStats(
-      posts: json['posts'] as int,
-      following: json['following'] as int,
-      followers: json['followers'] as int,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'posts': posts, 'following': following, 'followers': followers};
-  }
-
-  ProfileStats copyWith({int? posts, int? following, int? followers}) {
-    return ProfileStats(
-      posts: posts ?? this.posts,
-      following: following ?? this.following,
-      followers: followers ?? this.followers,
-    );
-  }
-
-  @override
-  List<Object> get props => [posts, following, followers];
 }

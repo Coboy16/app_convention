@@ -12,7 +12,7 @@ class FeedInitial extends FeedState {}
 class FeedLoading extends FeedState {}
 
 class FeedLoaded extends FeedState {
-  final List<PostModel> posts;
+  final List<PostTwoModel> posts;
   final List<StoryModel> stories;
 
   const FeedLoaded({required this.posts, required this.stories});

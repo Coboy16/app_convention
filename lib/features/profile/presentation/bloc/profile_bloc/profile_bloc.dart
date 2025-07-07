@@ -1,57 +1,79 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:konecta/features/profile/data/data.dart';
+
+import '/features/profile/domain/domain.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  ProfileBloc() : super(ProfileInitial()) {
+  final GetProfileUseCase getProfileUseCase;
+  final UpdateProfileUseCase updateProfileUseCase;
+  final UpdateProfileImageUseCase updateProfileImageUseCase;
+
+  ProfileBloc({
+    required this.getProfileUseCase,
+    required this.updateProfileUseCase,
+    required this.updateProfileImageUseCase,
+  }) : super(ProfileInitial()) {
     on<ProfileLoadRequested>(_onProfileLoadRequested);
     on<ProfileUpdateRequested>(_onProfileUpdateRequested);
+    on<ProfileImageUpdateRequested>(_onProfileImageUpdateRequested);
     on<ProfileRefreshRequested>(_onProfileRefreshRequested);
-    on<ProfileAvatarUpdateRequested>(_onProfileAvatarUpdateRequested);
   }
 
   Future<void> _onProfileLoadRequested(
     ProfileLoadRequested event,
     Emitter<ProfileState> emit,
   ) async {
-    try {
-      emit(ProfileLoading());
+    emit(ProfileLoading());
 
-      // Simular llamada a API con delay
-      await Future.delayed(const Duration(seconds: 1));
+    final result = await getProfileUseCase(event.userId);
 
-      // Usar mock data
-      final profile = ProfileModel.mockProfile;
-
-      emit(ProfileLoaded(profile: profile));
-    } catch (e) {
-      emit(ProfileError(message: 'Error al cargar el perfil: ${e.toString()}'));
-    }
+    result.fold(
+      (failure) => emit(ProfileError(message: failure.message)),
+      (profile) => emit(ProfileLoaded(profile: profile)),
+    );
   }
 
   Future<void> _onProfileUpdateRequested(
     ProfileUpdateRequested event,
     Emitter<ProfileState> emit,
   ) async {
-    try {
-      final currentState = state;
-      if (currentState is ProfileLoaded) {
-        emit(ProfileUpdating(profile: currentState.profile));
+    final currentState = state;
+    if (currentState is ProfileLoaded) {
+      emit(ProfileUpdating(profile: currentState.profile));
 
-        // Simular llamada a API para actualizar
-        await Future.delayed(const Duration(seconds: 1));
+      final result = await updateProfileUseCase(
+        userId: event.userId,
+        name: event.name,
+        bio: event.bio,
+        allergies: event.allergies,
+      );
 
-        emit(ProfileUpdated(profile: event.profile));
+      result.fold(
+        (failure) => emit(ProfileError(message: failure.message)),
+        (profile) => emit(ProfileLoaded(profile: profile)),
+      );
+    }
+  }
 
-        // Volver al estado loaded con los datos actualizados
-        emit(ProfileLoaded(profile: event.profile));
-      }
-    } catch (e) {
-      emit(
-        ProfileError(message: 'Error al actualizar el perfil: ${e.toString()}'),
+  Future<void> _onProfileImageUpdateRequested(
+    ProfileImageUpdateRequested event,
+    Emitter<ProfileState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is ProfileLoaded) {
+      emit(ProfileImageUploading(profile: currentState.profile));
+
+      final result = await updateProfileImageUseCase(
+        userId: event.userId,
+        imagePath: event.imagePath,
+      );
+
+      result.fold(
+        (failure) => emit(ProfileError(message: failure.message)),
+        (profile) => emit(ProfileLoaded(profile: profile)),
       );
     }
   }
@@ -60,58 +82,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     ProfileRefreshRequested event,
     Emitter<ProfileState> emit,
   ) async {
-    try {
-      // No mostrar loading para refresh
-      await Future.delayed(const Duration(milliseconds: 500));
+    final result = await getProfileUseCase(event.userId);
 
-      final profile = ProfileModel.mockProfile;
-      emit(ProfileLoaded(profile: profile));
-    } catch (e) {
-      emit(
-        ProfileError(message: 'Error al refrescar el perfil: ${e.toString()}'),
-      );
-    }
-  }
-
-  Future<void> _onProfileAvatarUpdateRequested(
-    ProfileAvatarUpdateRequested event,
-    Emitter<ProfileState> emit,
-  ) async {
-    try {
-      final currentState = state;
-      if (currentState is ProfileLoaded) {
-        emit(ProfileUpdating(profile: currentState.profile));
-
-        // Simular upload de imagen
-        await Future.delayed(const Duration(seconds: 2));
-
-        final updatedProfile = currentState.profile.copyWith(
-          avatarUrl: event.avatarUrl,
-        );
-
-        emit(ProfileLoaded(profile: updatedProfile));
-      }
-    } catch (e) {
-      emit(
-        ProfileError(message: 'Error al actualizar la imagen: ${e.toString()}'),
-      );
-    }
-  }
-
-  // Métodos helper
-  void loadProfile() {
-    add(ProfileLoadRequested());
-  }
-
-  void updateProfile(ProfileModel profile) {
-    add(ProfileUpdateRequested(profile: profile));
-  }
-
-  void refreshProfile() {
-    add(ProfileRefreshRequested());
-  }
-
-  void updateAvatar(String avatarUrl) {
-    add(ProfileAvatarUpdateRequested(avatarUrl: avatarUrl));
+    result.fold(
+      (failure) => emit(ProfileError(message: failure.message)),
+      (profile) => emit(ProfileLoaded(profile: profile)),
+    );
   }
 }
