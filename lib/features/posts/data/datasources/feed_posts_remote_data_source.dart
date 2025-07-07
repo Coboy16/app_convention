@@ -491,7 +491,7 @@ class FeedPostsRemoteDataSourceImpl implements FeedPostsRemoteDataSource {
         'viewedBy': FieldValue.arrayUnion([_currentUserId]),
       });
 
-      debugPrint('✅ Historia marcada como vista');
+      debugPrint('✅ Historia marcada como vista 222');
     } catch (e) {
       debugPrint('❌ Error al marcar historia como vista: ${e.toString()}');
       throw ServerException(

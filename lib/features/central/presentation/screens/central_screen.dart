@@ -65,7 +65,7 @@ class _CentralScreenState extends State<CentralScreen> {
 
     switch (selectedIndex) {
       case 0:
-        return const OrganizerDashboardScreen();
+        return const ParticipantDashboardScreen();
       // return const HomeScreen();
       case 1:
         return const PostScreen();
