@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
         final userRole = user.role;
         debugPrint('👤 Usuario: ${user.name} | Rol: $userRole');
 
-        if (userRole == 'organizer') {
+        if (userRole != 'organizer') {
           debugPrint('🎯 Navegando a Organizer Dashboard');
           return const OrganizerDashboardScreen();
         } else {

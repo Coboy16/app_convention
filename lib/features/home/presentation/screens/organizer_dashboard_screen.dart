@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:konecta/features/home/presentation/widgets/recent_updates_widget.dart';
+import 'package:konecta/features/posts/presentation/screens/create_post_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '/features/home/presentation/widgets/widgets.dart';
@@ -373,9 +374,11 @@ class _OrganizerDashboardScreenState extends State<OrganizerDashboardScreen> {
                   icon: LucideIcons.plus,
                   color: AppColors.primary,
                   onTap: () {
-                    ToastUtils.showInfo(
-                      context: context,
-                      message: 'Función próximamente...',
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreatePostScreen(),
+                      ),
                     );
                   },
                 ),
